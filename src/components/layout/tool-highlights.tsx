@@ -8,7 +8,7 @@ export function ToolHighlights({
 }: {
   title: string;
   description?: string;
-  items: { title: string; body: string }[];
+  items: { title: string; body: string; step?: string }[];
 }) {
   return (
     <section className="section-y">
@@ -26,8 +26,8 @@ export function ToolHighlights({
                 i === 2 && "md:col-span-2 lg:col-span-1",
               )}
             >
-              <span className="flex size-12 items-center justify-center rounded-[16px] bg-primary">
-                <Tag className="size-6 text-white" />
+              <span className="flex size-12 items-center justify-center rounded-[16px] bg-primary text-lg font-medium text-white">
+                {item.step ?? <Tag className="size-6 text-white" />}
               </span>
               <div className="flex flex-col gap-2">
                 <h3 className="text-xl font-semibold">{item.title}</h3>

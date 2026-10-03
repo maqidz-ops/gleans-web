@@ -53,8 +53,13 @@ export function OrderForm() {
       }
       setDocument({ file, words });
       toast.success(`${file.name} siap diproses.`);
-    } catch {
-      toast.error("Gagal membaca dokumen. Coba unggah ulang atau pakai format lain.");
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "";
+      toast.error(
+        detail && detail.length < 180
+          ? detail
+          : "Gagal membaca dokumen. Coba unggah ulang atau pakai format lain.",
+      );
     } finally {
       setReading(false);
     }

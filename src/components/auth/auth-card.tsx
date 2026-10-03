@@ -104,7 +104,13 @@ export function PasswordInput({
         aria-label={visible ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
         className="absolute top-1/2 right-3 -translate-y-1/2"
       >
-        <Image src="/images/icon-eye-slash.png" alt="" width={20} height={20} className="size-5" />
+        <Image
+          src={visible ? "/images/icon-eye-slash.png" : "/images/icon-eye.png"}
+          alt=""
+          width={20}
+          height={20}
+          className="size-5"
+        />
       </button>
     </div>
   );

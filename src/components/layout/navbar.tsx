@@ -1,10 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { ChevronDown, Menu } from "lucide-react";
-import { Logo, FeatureMark } from "@/components/brand/logo";
+import { Logo } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -38,7 +39,7 @@ export function Navbar() {
               {PRODUCTS.map((p) => (
                 <DropdownMenuItem key={p.href} asChild className="rounded-xl p-3">
                   <Link href={p.href} className="flex items-start gap-3">
-                    <FeatureMark className="mt-0.5 size-8 shrink-0" />
+                    <Image src={p.icon} alt="" width={32} height={32} className="mt-0.5 size-8 shrink-0" />
                     <span className="flex flex-col gap-0.5">
                       <span className="font-medium">
                         {p.name} <span className="text-muted-foreground">· {p.short}</span>
@@ -101,7 +102,7 @@ export function Navbar() {
                       onClick={() => setOpen(false)}
                       className="flex items-center gap-3 px-5 py-4 text-muted-foreground"
                     >
-                      <FeatureMark className="size-6" />
+                      <Image src={p.icon} alt="" width={24} height={24} className="size-6 shrink-0" />
                       <span className="text-base">
                         {p.name} <span className="text-muted-foreground">· {p.short}</span>
                       </span>

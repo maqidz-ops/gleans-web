@@ -58,9 +58,28 @@ export function validateWords(words: number): string | null {
 
 export async function extractWordCount(file: File): Promise<number> {
   const ext = extensionOf(file);
-  if (ext === "pdf") return countWords(await readPdf(file));
-  if (ext === "doc" || ext === "docx") return countWords(await readWord(file));
-  return countWords(await file.text());
+  const text = await withTimeout(
+    ext === "pdf" ? readPdf(file) : ext === "doc" || ext === "docx" ? readWord(file) : file.text(),
+    60_000,
+    "Membaca dokumen terlalu lama. Coba unggah ulang.",
+  );
+  return countWords(text);
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
 }
 
 function extensionOf(file: File) {
@@ -68,8 +87,10 @@ function extensionOf(file: File) {
 }
 
 async function readPdf(file: File) {
+  // Load the worker into this page. On Vercel the separate module worker often
+  // never becomes ready, so the upload stays stuck on "Membaca dokumen...".
+  await import("pdfjs-dist/build/pdf.worker.min.mjs");
   const pdfjs = await import("pdfjs-dist");
-  pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
   const task = pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) });
   const doc = await task.promise;
   try {
@@ -85,6 +106,10 @@ async function readPdf(file: File) {
 }
 
 async function readWord(file: File) {
+  const { Buffer } = await import("buffer");
+  if (typeof globalThis.Buffer === "undefined") {
+    globalThis.Buffer = Buffer;
+  }
   const mammoth = await import("mammoth");
   const { value } = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
   return value;
