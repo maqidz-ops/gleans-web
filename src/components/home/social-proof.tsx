@@ -4,11 +4,11 @@ const LOGOS = [
   { src: "/images/logo-unnes.png", alt: "Universitas Negeri Semarang", width: 955, height: 293, className: "h-9 w-[148px] md:h-11 md:w-[190px]" },
   { src: "/images/logo-amikom.png", alt: "Universitas Amikom Yogyakarta", width: 1024, height: 372, className: "h-9 w-[148px] md:h-11 md:w-[190px]" },
   { src: "/images/logo-dinamika.png", alt: "Universitas Dinamika", width: 880, height: 245, className: "h-9 w-[148px] md:h-11 md:w-[190px]" },
-  { src: "/images/logo-pertamina.png", alt: "Universitas Pertamina", width: 1024, height: 742, className: "h-16 w-[88px] md:h-20 md:w-[112px]" },
+  { src: "/images/logo-pertamina.png", alt: "Universitas Pertamina", width: 1024, height: 742, className: "h-24 w-[124px] md:h-[120px] md:w-[168px]" },
   { src: "/images/logo-cakrawala.png", alt: "Cakrawala University", width: 242, height: 66, className: "h-9 w-[148px] md:h-11 md:w-[190px]" },
-  { src: "/images/logo-telkom.png", alt: "Telkom University", width: 420, height: 571, className: "h-16 w-[60px] md:h-[88px] md:w-[68px]" },
+  { src: "/images/logo-telkom.png", alt: "Telkom University", width: 420, height: 571, className: "h-24 w-[72px] md:h-[132px] md:w-[100px]" },
   { src: "/images/logo-undip.png", alt: "Universitas Diponegoro", width: 880, height: 1024, className: "h-16 w-14 md:h-20 md:w-[72px]" },
-  { src: "/images/logo-esa-unggul.png", alt: "Universitas Esa Unggul", width: 784, height: 831, className: "h-16 w-[76px] md:h-20 md:w-[96px]" },
+  { src: "/images/logo-esa-unggul.png", alt: "Universitas Esa Unggul", width: 784, height: 831, className: "h-24 w-[108px] md:h-[120px] md:w-[144px]" },
 ] as const;
 
 export function SocialProof() {
