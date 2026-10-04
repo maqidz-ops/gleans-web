@@ -1,36 +1,42 @@
 import Image from "next/image";
-import { GraduationCap } from "lucide-react";
-import { ASSETS, UNIVERSITIES } from "@/lib/assets";
+
+const LOGOS = [
+  { src: "/images/logo-unnes.png", alt: "Universitas Negeri Semarang", width: 955, height: 293, className: "h-9 w-[148px] md:h-11 md:w-[190px]" },
+  { src: "/images/logo-amikom.png", alt: "Universitas Amikom Yogyakarta", width: 1024, height: 372, className: "h-9 w-[148px] md:h-11 md:w-[190px]" },
+  { src: "/images/logo-dinamika.png", alt: "Universitas Dinamika", width: 880, height: 245, className: "h-9 w-[148px] md:h-11 md:w-[190px]" },
+  { src: "/images/logo-pertamina.png", alt: "Universitas Pertamina", width: 1024, height: 742, className: "h-16 w-[88px] md:h-20 md:w-[112px]" },
+  { src: "/images/logo-cakrawala.png", alt: "Cakrawala University", width: 242, height: 66, className: "h-9 w-[148px] md:h-11 md:w-[190px]" },
+  { src: "/images/logo-telkom.png", alt: "Telkom University", width: 420, height: 571, className: "h-16 w-[60px] md:h-[88px] md:w-[68px]" },
+  { src: "/images/logo-undip.png", alt: "Universitas Diponegoro", width: 880, height: 1024, className: "h-16 w-14 md:h-20 md:w-[72px]" },
+  { src: "/images/logo-esa-unggul.png", alt: "Universitas Esa Unggul", width: 784, height: 831, className: "h-16 w-[76px] md:h-20 md:w-[96px]" },
+] as const;
 
 export function SocialProof() {
+  const logos = [...LOGOS, ...LOGOS];
+
   return (
     <section className="flex flex-col gap-[22px]">
       <p className="container-page text-center text-sm md:text-base">
         Gleans telah dipercaya oleh 50.000+ mahasiswa di seluruh Indonesia.
       </p>
-      <div className="bg-surface overflow-hidden py-5 md:py-6">
-        {ASSETS.socialProofStrip ? (
-          <Image
-            src={ASSETS.socialProofStrip}
-            alt="Kampus pengguna Gleans"
-            width={1280}
-            height={83}
-            className="mx-auto h-auto w-full max-w-[1280px]"
-          />
-        ) : (
-          <div className="group flex w-max animate-marquee gap-12 hover:[animation-play-state:paused] motion-reduce:animate-none">
-            {[...UNIVERSITIES, ...UNIVERSITIES].map((name, i) => (
-              <span
-                key={`${name}-${i}`}
-                aria-hidden={i >= UNIVERSITIES.length}
-                className="flex items-center gap-2 text-sm font-semibold whitespace-nowrap text-[#6b6f76] grayscale md:text-base"
-              >
-                <GraduationCap className="size-6 text-[#9a9ea5]" />
-                {name}
-              </span>
-            ))}
-          </div>
-        )}
+      <div className="overflow-hidden bg-white py-6 motion-reduce:overflow-x-auto md:py-8">
+        <ul className="flex w-max items-center gap-12 animate-marquee hover:[animation-play-state:paused] motion-reduce:animate-none">
+          {logos.map((logo, i) => (
+            <li
+              key={`${logo.src}-${i}`}
+              aria-hidden={i >= LOGOS.length}
+              className={`flex shrink-0 items-center justify-center ${logo.className}`}
+            >
+              <Image
+                src={logo.src}
+                alt={i >= LOGOS.length ? "" : logo.alt}
+                width={logo.width}
+                height={logo.height}
+                className="h-full w-full object-contain grayscale"
+              />
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );

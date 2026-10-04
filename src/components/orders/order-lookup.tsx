@@ -23,7 +23,7 @@ export function OrderLookup() {
           className="placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-sm outline-none md:text-base"
         />
         <Button type="submit" size="pill-sm" className="shrink-0 px-4 font-normal sm:px-5">
-          Cari Pesanan
+          Cari
         </Button>
       </form>
 
@@ -31,14 +31,14 @@ export function OrderLookup() {
         <Image
           src="/images/empty-order.png"
           alt=""
-          width={200}
-          height={186}
+          width={92}
+          height={88}
           className="h-auto w-[80px]"
         />
         <div className="flex max-w-md flex-col gap-2">
           <h1 className="text-2xl font-semibold tracking-tight md:text-[28px]">Tidak ada pesanan</h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Gleans hadir untuk mendukung setiap kebutuhan penulisan akademikmu.
+            Riwayat pesananmu akan tampil di sini setelah kamu melakukan pemesanan.
           </p>
         </div>
       </div>

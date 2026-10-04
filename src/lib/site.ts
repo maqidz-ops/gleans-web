@@ -6,6 +6,7 @@ export const PRODUCTS = [
     icon: "/images/logo-gleans-shield.svg",
     short: "Deteksi AI",
     description: "Membantu kamu mendeteksi tingkat plagiarisme dan AI menggunakan GPTZero.",
+    soon: false,
   },
   {
     name: "Gleans Writer",
@@ -14,6 +15,7 @@ export const PRODUCTS = [
     icon: "/images/logo-gleans-writer.svg",
     short: "Parafrase",
     description: "Membantu kamu memparafrase kata atau kalimat dengan lebih mudah.",
+    soon: true,
   },
   {
     name: "Gleans Cite",
@@ -22,6 +24,7 @@ export const PRODUCTS = [
     icon: "/images/logo-gleans-cite.svg",
     short: "Cite Generator",
     description: "Membantu menyusun sumber referensi dan buat sitasi dengan berbagai format.",
+    soon: true,
   },
 ] as const;
 
