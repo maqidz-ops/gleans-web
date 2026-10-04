@@ -26,6 +26,15 @@ export const PRODUCTS = [
     description: "Membantu menyusun sumber referensi dan buat sitasi dengan berbagai format.",
     soon: true,
   },
+  {
+    name: "Gleans File",
+    tag: "GLEANS FILE",
+    href: "/file",
+    icon: "/images/logo-gleans-file.svg",
+    short: "Manajemen File",
+    description: "Membantu kamu menyimpan dan mengelola dokumen akademik dalam satu tempat.",
+    soon: true,
+  },
 ] as const;
 
 export const NAV_LINKS = [

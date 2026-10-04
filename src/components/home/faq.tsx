@@ -15,7 +15,7 @@ const FAQS = [
   },
   {
     q: "Produk apa saja yang tersedia di Gleans?",
-    a: "Ada tiga: Gleans Shield untuk deteksi tulisan AI, Gleans Writer untuk parafrase kalimat, dan Gleans Cite untuk membuat sitasi APA 7 dan IEEE dari DOI atau judul karya.",
+    a: "Ada empat: Gleans Shield untuk deteksi tulisan AI, Gleans Writer untuk parafrase kalimat, Gleans Cite untuk membuat sitasi APA 7 dan IEEE dari DOI atau judul karya, dan Gleans File untuk mengelola dokumen akademik. Writer, Cite, dan File masih dalam pengembangan.",
   },
   {
     q: "Bagaimana cara menggunakan Gleans?",
