@@ -1,5 +1,7 @@
 "use client";
 
+import { forgotPassword } from "@/lib/auth/actions";
+import { useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { forgotPasswordSchema, type ForgotPasswordValues } from "@/lib/auth/schema";
 
 export function ForgotPasswordForm() {
+  const [serverError, setServerError] = useState<string>();
   const {
     register,
     handleSubmit,
@@ -20,8 +23,10 @@ export function ForgotPasswordForm() {
   });
 
   async function onSubmit(values: ForgotPasswordValues) {
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    toast.success(`Tautan pemulihan akan dikirim ke ${values.email}.`);
+    setServerError(undefined);
+    const result = await forgotPassword(values);
+    if (result.error) { setServerError(result.error); toast.error(result.error); }
+    else toast.success("Jika email terdaftar, tautan pemulihan akan dikirim. Periksa juga folder spam.");
   }
 
   return (
@@ -48,6 +53,7 @@ export function ForgotPasswordForm() {
             {...register("email")}
           />
         </AuthField>
+        {serverError && <p role="alert" className="text-destructive text-sm">{serverError}</p>}
         <Button type="submit" size="pill" disabled={isSubmitting} className="w-full font-normal">
           {isSubmitting && <Loader2 className="animate-spin" />}
           Kirim Lewat Email
