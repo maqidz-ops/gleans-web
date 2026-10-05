@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { FileWorkspace } from "@/components/file/file-workspace";
 
 export const metadata: Metadata = {
@@ -11,6 +12,10 @@ export default function FilePage() {
   return (
     <section className="container-page flex flex-col gap-10 pt-10 pb-16 md:gap-14 md:pt-14 lg:gap-[60px] lg:pt-[60px] lg:pb-20">
       <header className="flex flex-col gap-3">
+        <p className="text-primary flex items-center gap-2 text-sm font-medium tracking-wide">
+          <Image src="/images/logo-gleans-file.svg" alt="" width={20} height={20} className="size-5" />
+          GLEANS FILE
+        </p>
         <h1 className="text-[32px] leading-tight font-medium tracking-tight md:text-[40px] lg:text-[48px]">
           Kelola dokumenmu lebih mudah
         </h1>
