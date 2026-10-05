@@ -32,7 +32,7 @@ export const PRODUCTS = [
     href: "/file",
     icon: "/images/logo-gleans-file.svg",
     short: "Manajemen File",
-    description: "Siapkan dokumen akademikmu dengan pilihan convert, merge, dan compress dalam satu tempat.",
+    description: "Konversi dokumen dan gambar ke PDF, gabungkan PDF, serta kompres file dalam satu tempat.",
     soon: false,
   },
 ] as const;

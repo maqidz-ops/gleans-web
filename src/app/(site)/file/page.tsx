@@ -6,7 +6,7 @@ import { FileWorkspace } from "@/components/file/file-workspace";
 export const metadata: Metadata = {
   title: "Gleans File — Kelola Dokumen",
   description:
-    "Siapkan dokumen akademikmu di Gleans File. Pilih file dan jelajahi alat convert, merge, dan compress dalam satu tempat.",
+    "Konversi DOCX, DOC, TXT, PNG dan JPEG ke PDF, gabungkan PDF, serta kompres dokumen langsung di perangkatmu dengan Gleans File.",
 };
 
 export default function FilePage() {
