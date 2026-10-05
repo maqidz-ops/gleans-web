@@ -1,3 +1,5 @@
+// PDF.js 6 still expects this API even in its legacy build.
+import "core-js/actual/promise/with-resolvers.js";
 import { z } from "zod";
 import { countWords, formatBytes, formatNumber } from "@/lib/format";
 
@@ -87,10 +89,11 @@ function extensionOf(file: File) {
 }
 
 async function readPdf(file: File) {
+  // Both bundles need the legacy polyfills for older mobile browsers.
   // Load the worker into this page. On Vercel the separate module worker often
   // never becomes ready, so the upload stays stuck on "Membaca dokumen...".
-  await import("pdfjs-dist/build/pdf.worker.min.mjs");
-  const pdfjs = await import("pdfjs-dist");
+  await import("pdfjs-dist/legacy/build/pdf.worker.min.mjs");
+  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const task = pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) });
   const doc = await task.promise;
   try {
