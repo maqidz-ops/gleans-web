@@ -41,3 +41,21 @@ yarn-error.log*
 next-env.d.ts
 
 .shots
+
+!.env.example
+.insforge/
+
+# InsForge & AI agent skills
+.insforge
+.agent
+.agents
+.augment
+.claude
+.cline
+.github/copilot*
+.kilocode
+.qoder
+.qwen
+.roo
+.trae
+.windsurf

@@ -1,30 +1,32 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { AuthCard, AuthField, AuthInput, PasswordInput } from "@/components/auth/auth-card";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { login } from "@/lib/auth/actions";
+
 import { loginSchema, type LoginValues } from "@/lib/auth/schema";
 
 export function LoginForm() {
+  const [serverError, setServerError] = useState<string>();
   const {
     register,
-    control,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: "", password: "", remember: true },
+    defaultValues: { email: "", password: "" },
   });
 
   async function onSubmit(values: LoginValues) {
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    toast.success(`Selamat datang kembali, ${values.email}. Autentikasi segera hadir.`);
+    setServerError(undefined);
+    const result = await login(values);
+    if (result?.error) { setServerError(result.error); toast.error(result.error); }
   }
 
   return (
@@ -61,22 +63,11 @@ export function LoginForm() {
           />
         </AuthField>
         <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Controller
-              name="remember"
-              control={control}
-              render={({ field }) => (
-                <Checkbox id="remember" checked={field.value} onCheckedChange={field.onChange} />
-              )}
-            />
-            <Label htmlFor="remember" className="font-normal">
-              Ingat saya
-            </Label>
-          </div>
           <Link href="/lupa-kata-sandi" className="text-primary text-sm font-medium">
             Lupa Kata Sandi?
           </Link>
         </div>
+        {serverError && <p role="alert" className="text-destructive text-sm">{serverError}</p>}
         <Button type="submit" size="pill" disabled={isSubmitting} className="w-full font-normal">
           {isSubmitting && <Loader2 className="animate-spin" />}
           Masuk Sekarang

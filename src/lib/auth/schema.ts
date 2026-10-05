@@ -12,7 +12,6 @@ export const registerSchema = z.object({
 export const loginSchema = z.object({
   email,
   password,
-  remember: z.boolean(),
 });
 
 export const forgotPasswordSchema = z.object({ email });
@@ -20,3 +19,9 @@ export const forgotPasswordSchema = z.object({ email });
 export type RegisterValues = z.infer<typeof registerSchema>;
 export type LoginValues = z.infer<typeof loginSchema>;
 export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z.object({ password, confirmPassword: z.string() }).refine(
+  (values) => values.password === values.confirmPassword,
+  { message: "Konfirmasi kata sandi harus sama.", path: ["confirmPassword"] },
+);
+export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;

@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+import { signup } from "@/lib/auth/actions";
+import { VerificationForm } from "@/components/auth/verification-form";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { registerSchema, type RegisterValues } from "@/lib/auth/schema";
 
 export function RegisterForm() {
+  const [serverError, setServerError] = useState<string>();
+  const [verification, setVerification] = useState<{ email: string; method?: string } | null>(null);
   const {
     register,
     handleSubmit,
@@ -20,9 +25,13 @@ export function RegisterForm() {
   });
 
   async function onSubmit(values: RegisterValues) {
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    toast.success(`Akun untuk ${values.email} siap dibuat. Autentikasi segera hadir.`);
+    setServerError(undefined);
+    const result = await signup(values);
+    if (result?.error) { setServerError(result.error); toast.error(result.error); }
+    else if (result?.verification) setVerification({ email: values.email, method: result.method });
   }
+
+  if (verification) return <VerificationForm email={verification.email} method={verification.method} />;
 
   return (
     <AuthCard
@@ -62,6 +71,7 @@ export function RegisterForm() {
             {...register("password")}
           />
         </AuthField>
+        {serverError && <p role="alert" className="text-destructive text-sm">{serverError}</p>}
         <Button type="submit" size="pill" disabled={isSubmitting} className="w-full font-normal">
           {isSubmitting && <Loader2 className="animate-spin" />}
           Daftar Sekarang
