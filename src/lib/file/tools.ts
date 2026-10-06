@@ -187,6 +187,37 @@ export async function convertToPdf(file: File, context: ProcessContext = {}): Pr
   return { name: outputName(file.name), bytes: data, pages: 1, sourceBytes: file.size };
 }
 
+/** Combine image selections into one PDF, following their visible file order. */
+export async function imagesToPdf(files: File[], context: ProcessContext = {}): Promise<FileResult> {
+  validateSelection(files, "convert");
+  if (files.some((file) => !["png", "jpg", "jpeg"].includes(extension(file.name)))) {
+    throw new Error("Pilih PNG atau JPEG untuk PDF gambar.");
+  }
+  checkpoint(context);
+  const { PDFDocument } = await import("pdf-lib");
+  const output = await PDFDocument.create();
+  for (let index = 0; index < files.length; index += 1) {
+    checkpoint(context);
+    context.onProgress?.(`Mengonversi gambar ${index + 1} dari ${files.length}…`);
+    try {
+      const result = await convertToPdf(files[index], { ...context, onProgress: undefined });
+      const source = await loadPdf(result.bytes);
+      const pages = await output.copyPages(source, source.getPageIndices());
+      pages.forEach((page) => output.addPage(page));
+    } catch (error) {
+      checkpoint(context);
+      throw new Error(`${files[index].name}: ${fileError(error)}`);
+    }
+    await yieldToBrowser(context);
+  }
+  const bytes = await output.save({ useObjectStreams: true });
+  checkpoint(context);
+  return {
+    name: files.length === 1 ? outputName(files[0].name) : "gleans-gambar.pdf",
+    bytes, pages: output.getPageCount(), sourceBytes: files.reduce((sum, file) => sum + file.size, 0),
+  };
+}
+
 export async function compressPdf(file: File, context: ProcessContext = {}): Promise<FileResult> {
   validateSelection([file], "compress");
   checkpoint(context);

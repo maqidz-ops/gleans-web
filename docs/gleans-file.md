@@ -2,7 +2,7 @@
 
 `/file` processes files locally in the browser; documents are not uploaded to a server. Processing libraries load when an action starts. The DOC worker and PDF font are served from the same site.
 
-The workspace uses two panels: input files on the left and results on the right (stacked on mobile). Both panels show document counts and combined sizes. The Download button saves one result as PDF or multiple results together as ZIP; individual results also have their own download links.
+The workspace uses two panels: input files on the left and results on the right (stacked on mobile). Both panels show document counts and combined sizes. The Download button saves one result as PDF or multiple results together as ZIP; individual results also have their own download links. Image selections (PNG/JPEG) combine into a single PDF in their selected order; document conversions remain separate when mixed with images. The input panel supports clicking or Enter/Space to choose files, while its action controls do not open the picker. Workspace panels use 24 px corners, file and result cards use 16 px corners, and tabs, summary bars, and their action buttons use fully rounded corners.
 
 ## Supported actions
 

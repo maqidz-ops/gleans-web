@@ -35,7 +35,7 @@ delete Promise.withResolvers;
 const tools = await import(`${directory}/tools.mjs`);
 assert.equal(typeof Promise.withResolvers, 'function');
 const { extractDocText } = await import(`${directory}/doc.mjs`);
-const { mergePdfs, convertToPdf, compressPdf, validateSelection } = tools;
+const { mergePdfs, convertToPdf, imagesToPdf, compressPdf, validateSelection } = tools;
 const fontBytes = new Uint8Array(await readFile('public/fonts/NotoSans-Regular.ttf'));
 const context = { fontBytes };
 const rootRequire = createRequire(import.meta.url);
@@ -135,6 +135,28 @@ test('PNG and JPEG produce a one-page PDF with embedded image content', async ()
     assert.ok(result.bytes.length > 100);
   }
   await assert.rejects(convertToPdf(new File(['bad png'], 'bad.png'), context), /PNG/);
+});
+
+test('PNG and JPEG selections form one PDF in the selected order', async () => {
+  const wide = createCanvas(120, 60);
+  const tall = createCanvas(60, 120);
+  wide.getContext('2d').fillRect(0, 0, 120, 60);
+  tall.getContext('2d').fillRect(0, 0, 60, 120);
+  const png = new File([wide.toBuffer('image/png')], 'wide.png');
+  const jpeg = new File([tall.toBuffer('image/jpeg')], 'tall.jpeg');
+  const result = await imagesToPdf([jpeg, png]);
+  assert.equal(result.name, 'gleans-gambar.pdf');
+  assert.equal(result.pages, 2);
+  assert.equal(result.sourceBytes, png.size + jpeg.size);
+  const pdf = await PDFDocument.load(result.bytes);
+  const [first, second] = pdf.getPages().map((page) => page.getSize());
+  assert.ok(first.height > first.width);
+  assert.ok(second.width > second.height);
+  const reversed = await PDFDocument.load((await imagesToPdf([png, jpeg])).bytes);
+  assert.ok(reversed.getPage(0).getWidth() > reversed.getPage(0).getHeight());
+  await assert.rejects(imagesToPdf([new File(['text'], 'wrong.txt')]), /PNG atau JPEG/);
+  const controller = new AbortController(); controller.abort();
+  await assert.rejects(imagesToPdf([png], { signal: controller.signal }), { name: 'AbortError' });
 });
 
 test('automatic compression falls back for compact text and never returns a larger file', async () => {
