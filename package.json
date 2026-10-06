@@ -6,25 +6,33 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "build:doc-worker": "node scripts/build-doc-worker.cjs",
+    "prebuild": "npm run build:doc-worker",
+    "predev": "npm run build:doc-worker",
+    "test:file": "npm run build:doc-worker && node scripts/test-file-tools.mjs"
   },
   "dependencies": {
     "@citation-js/core": "^0.9.0",
     "@citation-js/plugin-csl": "^0.9.0",
     "@hookform/resolvers": "^5.9.1",
+    "@pdf-lib/fontkit": "^1.1.1",
     "@react-pdf/renderer": "^4.9.0",
     "@tanstack/react-query": "^5.104.0",
+    "cfb": "^1.2.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cn": "^0.4.0",
     "core-js": "^3.50.0",
     "embla-carousel-react": "^8.6.0",
     "gray-matter": "^4.0.3",
+    "jszip": "^3.10.2",
     "lucide-react": "^1.49.0",
     "mammoth": "^1.13.0",
     "next": "15.5.26",
     "next-mdx-remote": "^6.0.0",
     "next-themes": "^0.4.6",
+    "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^6.3.289",
     "qrcode.react": "^4.2.0",
     "radix-ui": "^1.6.7",
@@ -45,10 +53,12 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "browserify": "^17.0.1",
     "eslint": "^9",
     "eslint-config-next": "15.5.26",
     "msw": "^3.0.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "word-extractor": "1.0.4"
   }
 }
