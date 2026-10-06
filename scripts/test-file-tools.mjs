@@ -9,8 +9,8 @@ import { PDFDocument, StandardFonts } from 'pdf-lib';
 
 const directory = await mkdtemp(resolve('.file-tools-test-'));
 after(() => rm(directory, { recursive: true, force: true }));
-for (const name of ['tools', 'doc']) {
-  const source = (await readFile(`src/lib/file/${name}.ts`, 'utf8')).replace('"./doc"', '"./doc.mjs"');
+for (const name of ['tools', 'doc', 'compress']) {
+  const source = (await readFile(`src/lib/file/${name}.ts`, 'utf8')).replace('"./doc"', '"./doc.mjs"').replace('"./compress"', '"./compress.mjs"');
   await writeFile(`${directory}/${name}.mjs`, ts.transpileModule(source, {
     compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
   }).outputText);
@@ -43,6 +43,14 @@ const canvasRequire = createRequire(rootRequire.resolve('pdfjs-dist/package.json
 const { createCanvas } = canvasRequire('@napi-rs/canvas');
 const mammothRequire = createRequire(rootRequire.resolve('mammoth/package.json'));
 const JSZip = mammothRequire('jszip');
+
+  globalThis.window = { requestAnimationFrame: (callback) => setTimeout(callback, 0), cancelAnimationFrame: clearTimeout, document: { createElement: () => {
+    const target = createCanvas(1, 1);
+    target.toBlob = async (callback, mime, quality) => callback(new Blob([await target.encode('jpeg', Math.round(quality * 100))], { type: mime }));
+    return target;
+  } } };
+
+after(() => { delete globalThis.window; });
 
 async function pdfFile(name, labels, objectStreams = false) {
   const doc = await PDFDocument.create();
@@ -79,7 +87,7 @@ test('reject invalid formats, insufficient merge files, empty and oversized sele
   assert.throws(() => validateSelection([new File([], 'empty.txt')], 'convert'), /kosong/);
   const large = new File([new Uint8Array(25 * 1024 * 1024 + 1)], 'large.pdf');
   assert.throws(() => validateSelection([large], 'compress'), /25 MB/);
-  assert.throws(() => validateSelection(Array.from({ length: 11 }, (_, i) => new File(['x'], `${i}.pdf`)), 'merge'), /maksimal 10/);
+  assert.doesNotThrow(() => validateSelection(Array.from({ length: 20 }, (_, i) => new File(['x'], `${i}.pdf`)), 'merge'));
   const medium = new File([new Uint8Array(20 * 1024 * 1024)], 'medium.pdf');
   assert.throws(() => validateSelection([medium, medium, medium], 'compress'), /50 MB/);
   await assert.rejects(mergePdfs([await pdfFile('good.pdf', ['OK']), new File(['bad data'], 'bad.pdf')]), /bad.pdf/);
@@ -129,18 +137,18 @@ test('PNG and JPEG produce a one-page PDF with embedded image content', async ()
   await assert.rejects(convertToPdf(new File(['bad png'], 'bad.png'), context), /PNG/);
 });
 
-test('lossless compression keeps text and never returns a larger file', async () => {
+test('automatic compression falls back for compact text and never returns a larger file', async () => {
   const input = await pdfFile('text.pdf', ['SEARCHABLE TEXT'], false);
-  const result = await compressPdf(input, 'lossless');
+  const result = await compressPdf(input);
   assert.ok(result.bytes.length <= input.size);
   assert.equal((await textPages(result.bytes))[0].trim(), 'SEARCHABLE TEXT');
   const compact = new File([result.bytes], 'compact.pdf');
-  const again = await compressPdf(compact, 'lossless');
+  const again = await compressPdf(compact);
   assert.ok(again.bytes.length <= compact.size);
   if (again.bytes.length === compact.size) assert.deepEqual(again.bytes, new Uint8Array(await compact.arrayBuffer()));
 });
 
-test('small mode reduces image-heavy PDF and produces readable pages', async () => {
+test('automatic compression reduces image-heavy PDF and preserves page dimensions', async () => {
   const canvas = createCanvas(512, 512);
   const ctx = canvas.getContext('2d');
   const pixels = ctx.createImageData(512, 512);
@@ -154,21 +162,22 @@ test('small mode reduces image-heavy PDF and produces readable pages', async () 
   const image = await doc.embedPng(canvas.toBuffer('image/png'));
   doc.addPage([512, 512]).drawImage(image, { x: 0, y: 0, width: 512, height: 512 });
   const input = new File([await doc.save()], 'scan.pdf');
-  globalThis.window = { requestAnimationFrame: (callback) => setTimeout(callback, 0), cancelAnimationFrame: clearTimeout, document: { createElement: () => {
-    const target = createCanvas(1, 1);
-    target.toBlob = async (callback, mime, quality) => callback(new Blob([await target.encode('jpeg', Math.round(quality * 100))], { type: mime }));
-    return target;
-  } } };
-  try {
-    const result = await compressPdf(input, 'small');
-    assert.ok(result.bytes.length < input.size);
-    assert.equal((await PDFDocument.load(result.bytes)).getPageCount(), 1);
-    assert.match(result.notice, /Halaman menjadi gambar/);
-  } finally { delete globalThis.window; }
+  const result = await compressPdf(input);
+  assert.ok(result.bytes.length < input.size);
+  const output = await PDFDocument.load(result.bytes);
+  assert.equal(output.getPageCount(), 1);
+  assert.deepEqual(output.getPage(0).getSize(), { width: 512, height: 512 });
+  assert.match(result.notice, /Halaman menjadi gambar/);
+  const controller = new AbortController();
+  await assert.rejects(compressPdf(input, {
+    signal: controller.signal,
+    onProgress: (message) => { if (message.includes("halaman")) controller.abort(); },
+  }), { name: 'AbortError' });
 });
 
 test('cancellation prevents output and terminates DOC parsing', async () => {
   const controller = new AbortController(); controller.abort();
+  await assert.rejects(compressPdf(await pdfFile("cancel.pdf", ["CANCEL"]), { signal: controller.signal }), { name: "AbortError" });
   await assert.rejects(mergePdfs([await pdfFile('a.pdf', ['A']), await pdfFile('b.pdf', ['B'])], { signal: controller.signal }), { name: 'AbortError' });
   await assert.rejects(convertToPdf(new File(['x'], 'x.txt'), { ...context, signal: controller.signal }), { name: 'AbortError' });
   await assert.rejects(extractDocText(new Uint8Array(await readFile('tests/fixtures/word-table.doc')), controller.signal), { name: 'AbortError' });

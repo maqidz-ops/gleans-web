@@ -1,8 +1,6 @@
 import "core-js/actual/promise/with-resolvers.js";
-import type { PDFDocumentProxy } from "pdfjs-dist";
 import type { PDFFont } from "pdf-lib";
 
-export type CompressionMode = "lossless" | "small";
 export type FileResult = {
   name: string;
   bytes: Uint8Array;
@@ -18,7 +16,6 @@ export type ProcessContext = {
 
 export const MAX_FILE_BYTES = 25 * 1024 * 1024;
 export const MAX_TOTAL_BYTES = 50 * 1024 * 1024;
-export const MAX_FILES = 10;
 export const CONVERT_EXTENSIONS = ["docx", "doc", "txt", "png", "jpg", "jpeg"];
 
 export function extension(name: string) {
@@ -27,7 +24,6 @@ export function extension(name: string) {
 
 export function validateSelection(files: File[], tool: "convert" | "merge" | "compress") {
   if (!files.length) throw new Error("Pilih file terlebih dahulu.");
-  if (files.length > MAX_FILES) throw new Error(`Pilih maksimal ${MAX_FILES} file.`);
   if (files.reduce((sum, file) => sum + file.size, 0) > MAX_TOTAL_BYTES) throw new Error("Total ukuran file maksimal 50 MB.");
   for (const file of files) {
     if (!file.size) throw new Error(`${file.name}: file kosong.`);
@@ -191,79 +187,19 @@ export async function convertToPdf(file: File, context: ProcessContext = {}): Pr
   return { name: outputName(file.name), bytes: data, pages: 1, sourceBytes: file.size };
 }
 
-async function openRenderedPdf(bytes: Uint8Array, context: ProcessContext) {
-  await import("pdfjs-dist/legacy/build/pdf.worker.min.mjs");
-  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  const task = pdfjs.getDocument({ data: bytes, useSystemFonts: true });
-  task.onPassword = () => { void task.destroy(); };
-  const cancel = () => { void task.destroy(); };
-  context.signal?.addEventListener("abort", cancel, { once: true });
-  try {
-    checkpoint(context);
-    const document = await task.promise;
-    return { document, destroy: async () => { context.signal?.removeEventListener("abort", cancel); await task.destroy(); } };
-  } catch (error) {
-    context.signal?.removeEventListener("abort", cancel);
-    await task.destroy();
-    checkpoint(context);
-    throw error;
-  }
-}
-
-async function rasterizePdf(document: PDFDocumentProxy, context: ProcessContext) {
-  if (document.numPages > 100) throw new Error("Mode ukuran kecil maksimal 100 halaman. Gunakan mode Pertahankan teks atau bagi PDF.");
-  const { PDFDocument } = await import("pdf-lib");
-  const output = await PDFDocument.create();
-  for (let number = 1; number <= document.numPages; number += 1) {
-    checkpoint(context);
-    context.onProgress?.(`Mengompres halaman ${number} dari ${document.numPages}…`);
-    const page = await document.getPage(number);
-    const original = page.getViewport({ scale: 1 });
-    const scale = Math.min(1.5, 1600 / Math.max(original.width, original.height));
-    const viewport = page.getViewport({ scale });
-    const canvas = window.document.createElement("canvas");
-    canvas.width = Math.max(1, Math.ceil(viewport.width));
-    canvas.height = Math.max(1, Math.ceil(viewport.height));
-    try {
-      await page.render({ canvas, viewport, background: "rgb(255,255,255)" }).promise;
-      const jpeg = await new Promise<Blob>((resolve, reject) => canvas.toBlob(
-        (blob) => blob ? resolve(blob) : reject(new Error("Halaman PDF gagal dikompres.")), "image/jpeg", 0.65,
-      ));
-      checkpoint(context);
-      const image = await output.embedJpg(await jpeg.arrayBuffer());
-      const target = output.addPage([original.width, original.height]);
-      target.drawImage(image, { x: 0, y: 0, width: original.width, height: original.height });
-    } finally {
-      canvas.width = canvas.height = 0;
-      page.cleanup();
-    }
-    await yieldToBrowser(context);
-  }
-  return output.save({ useObjectStreams: true });
-}
-
-export async function compressPdf(file: File, mode: CompressionMode, context: ProcessContext = {}): Promise<FileResult> {
+export async function compressPdf(file: File, context: ProcessContext = {}): Promise<FileResult> {
   validateSelection([file], "compress");
   checkpoint(context);
-  context.onProgress?.(`Mengoptimalkan ${file.name}…`);
   const original = new Uint8Array(await file.arrayBuffer());
   const document = await loadPdf(original);
   if (!document.getPageCount()) throw new Error("PDF tidak memiliki halaman.");
-  let bytes: Uint8Array;
-  if (mode === "small") {
-    // Keep the original byte array: PDF.js takes ownership of its input.
-    const rendered = await openRenderedPdf(original.slice(), context);
-    try { bytes = await rasterizePdf(rendered.document, context); }
-    finally { await rendered.destroy(); }
-  } else {
-    bytes = await document.save({ useObjectStreams: true, addDefaultPage: false });
-  }
+  const { compressAutomatically } = await import("./compress");
+  const { bytes, rasterized } = await compressAutomatically(original, file.name, context);
   checkpoint(context);
-  const smaller = bytes.length < original.length;
   return {
-    name: outputName(file.name, "-kompres"), bytes: smaller ? bytes : original,
+    name: outputName(file.name, "-kompres"), bytes,
     pages: document.getPageCount(), sourceBytes: file.size,
-    notice: !smaller ? "PDF sudah efisien untuk mode ini. File asli dikembalikan agar ukuran tidak bertambah."
-      : mode === "small" ? "Halaman menjadi gambar. Teks tidak dapat dipilih; formulir dan tautan interaktif tidak dipertahankan." : undefined,
+    notice: bytes.length >= original.length ? "PDF sudah efisien. File asli dikembalikan agar ukuran tidak bertambah."
+      : rasterized ? "Halaman menjadi gambar. Teks tidak dapat dipilih; formulir dan tautan interaktif tidak dipertahankan." : undefined,
   };
 }
