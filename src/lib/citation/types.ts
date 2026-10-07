@@ -22,7 +22,7 @@ export type CslItem = {
   URL?: string;
 };
 
-export type CitationStyle = "apa" | "ieee";
+export type CitationStyle = "apa" | "ieee" | "vancouver";
 
 export type Source = { id: string; csl: CslItem; addedAt: number };
 
@@ -40,4 +40,5 @@ export type Candidate = {
 export const STYLE_LABEL: Record<CitationStyle, string> = {
   apa: "APA 7",
   ieee: "IEEE",
+  vancouver: "Vancouver",
 };

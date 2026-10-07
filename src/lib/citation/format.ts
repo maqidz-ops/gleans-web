@@ -1,10 +1,11 @@
 import { Cite, plugins } from "@citation-js/core";
 import "@citation-js/plugin-csl";
 import apaStyle from "./styles/apa";
+import vancouverStyle from "./styles/vancouver";
 import ieeeStyle from "./styles/ieee";
 import type { CitationStyle, CslItem } from "./types";
 
-const TEMPLATE: Record<CitationStyle, string> = { apa: "gleans-apa7", ieee: "gleans-ieee" };
+const TEMPLATE: Record<CitationStyle, string> = { apa: "gleans-apa7", ieee: "gleans-ieee", vancouver: "gleans-vancouver" };
 
 let registered = false;
 function ensureTemplates() {
@@ -14,6 +15,7 @@ function ensureTemplates() {
   };
   styles.add(TEMPLATE.apa, apaStyle);
   styles.add(TEMPLATE.ieee, ieeeStyle);
+  styles.add(TEMPLATE.vancouver, vancouverStyle);
   registered = true;
 }
 
@@ -32,15 +34,9 @@ export function formatBibliography(items: CslItem[], style: CitationStyle): Form
     id,
     html: value.trim(),
     text: textById.get(id) ?? "",
-    inText:
-      style === "ieee"
-        ? `[${index + 1}]`
-        : String(
-            new Cite(items.find((i) => i.id === id)).format("citation", {
-              template: TEMPLATE[style],
-              lang: "en-US",
-              format: "text",
-            } as never),
-          ).trim(),
+    inText: style === "ieee" ? `[${index + 1}]` : style === "vancouver" ? `(${index + 1})` : String(cite.format("citation", {
+      template: TEMPLATE[style], lang: "en-US", format: "text", entry: [id],
+      citationsPre: items.filter((item) => item.id !== id).map((item) => [item.id]),
+    } as never)).trim(),
   }));
 }

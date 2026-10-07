@@ -10,7 +10,8 @@
     "build:doc-worker": "node scripts/build-doc-worker.cjs",
     "prebuild": "npm run build:doc-worker",
     "predev": "npm run build:doc-worker",
-    "test:file": "npm run build:doc-worker && node scripts/test-file-tools.mjs"
+    "test:file": "npm run build:doc-worker && node scripts/test-file-tools.mjs",
+    "test:cite": "node scripts/test-citation.mjs"
   },
   "dependencies": {
     "@citation-js/core": "^0.9.0",

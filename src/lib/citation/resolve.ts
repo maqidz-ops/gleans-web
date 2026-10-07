@@ -68,7 +68,11 @@ function stripMarkup(value: string) {
 }
 
 async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, init);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  let res: Response;
+  try { res = await fetch(url, { ...init, signal: controller.signal }); }
+  finally { clearTimeout(timer); }
   if (res.status === 404) throw new CitationError("Sumber tidak ditemukan.");
   if (!res.ok) throw new CitationError(`Layanan metadata sedang bermasalah (${res.status}).`);
   return res.json() as Promise<T>;
