@@ -1,44 +1,25 @@
 import type { Metadata } from "next";
-import { CiteGenerator } from "@/components/citation/cite-generator";
+import Image from "next/image";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
-import { CtaBanner } from "@/components/layout/cta-banner";
-import { PageIntro } from "@/components/layout/section-heading";
-import { ToolHighlights } from "@/components/layout/tool-highlights";
+import { CiteWorkspace } from "@/components/citation/cite-workspace";
 
 export const metadata: Metadata = {
-  title: "Cite Generator APA 7 & IEEE",
-  description: "Buat sitasi APA 7 dan IEEE otomatis dari DOI atau judul karya ilmiah. Gratis dan langsung bisa disalin.",
+  title: "Gleans Cite — Susun Daftar Pustaka",
+  description: "Cari referensi lewat judul atau DOI, buat sitasi APA 7, IEEE dan Vancouver, serta unduh daftar pustaka.",
 };
 
 export default function SitasiPage() {
   return (
     <>
       <Breadcrumb items={[{ label: "Gleans Cite" }]} />
-      <section className="container-page flex flex-col gap-10 pt-10 pb-16 md:pt-14 lg:gap-12 lg:pt-[60px] lg:pb-24">
-        <PageIntro
-          title="Cite Generator"
-          description="Buat sitasi APA 7 dan IEEE dari DOI atau judul karya dalam hitungan detik."
-        />
-        <CiteGenerator />
+      <section className="container-page flex flex-col gap-10 pt-10 pb-16 md:gap-12 md:pt-14 lg:pb-24">
+        <header className="flex flex-col gap-3">
+          <p className="flex items-center gap-2 text-sm font-medium tracking-wide text-primary"><Image src="/images/logo-gleans-cite.svg" alt="" width={20} height={20} />GLEANS CITE</p>
+          <h1 className="text-[32px] font-medium leading-tight tracking-tight md:text-[40px] lg:text-[48px]">Sumber terpercaya, sitasi tertata.</h1>
+          <p className="text-base leading-relaxed text-muted-foreground">Dari referensi pertama sampai daftar pustaka terakhir, susun lebih mudah bersama Gleans.</p>
+        </header>
+        <CiteWorkspace />
       </section>
-      <ToolHighlights
-        title="Sitasi rapi tanpa ketik manual"
-        items={[
-          {
-            title: "Data dari Crossref",
-            body: "Metadata diambil dari Crossref dan OpenAlex, basis data jutaan artikel ilmiah.",
-          },
-          {
-            title: "APA 7 & IEEE",
-            body: "Berpindah gaya sitasi dengan satu klik, lengkap dengan kutipan dalam teks.",
-          },
-          {
-            title: "Tersimpan di perangkatmu",
-            body: "Daftar pustaka disimpan di browser, jadi tidak hilang saat halaman dimuat ulang.",
-          },
-        ]}
-      />
-      <CtaBanner />
     </>
   );
 }
