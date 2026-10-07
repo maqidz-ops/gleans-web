@@ -1,0 +1,31 @@
+"use client";
+import { type ReactNode, useState } from "react";
+import { toast } from "sonner";
+import { ArrowUpRight, Check, ReceiptText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PLANS } from "@/lib/plans";
+import { formatRupiah } from "@/lib/format";
+import { purchaseError, type Purchase, type Outcome, type Order } from "@/lib/dashboard/model";
+import { useDashboard } from "./provider";
+import { cn } from "@/lib/utils";
+export const fieldClass = "h-11 w-full min-w-0 rounded-xl border bg-white px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary";
+export const methodLabels = { quota: "Kuota paket", balance: "Saldo Gleans", qris: "QRIS demo" };
+export const paymentLabels = { paid: "Terbayar", pending: "Menunggu pembayaran", failed: "Pembayaran gagal", expired: "Kedaluwarsa", refunded: "Dikembalikan" };
+export const processingLabels = { waiting: "Belum diproses", queued: "Antre", processing: "Diproses", completed: "Selesai", failed: "Pemeriksaan gagal" };
+export function dateLabel(at: string) { return new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Jakarta" }).format(new Date(at)); }
+export function Panel({ children, className }: { children: ReactNode; className?: string }) { return <section className={cn("min-w-0 rounded-[24px] bg-surface p-4 sm:p-5", className)}>{children}</section>; }
+export function Heading({ title, description, action }: { title: string; description: string; action?: ReactNode }) { return <div className="mb-7 flex flex-wrap items-end justify-between gap-4"><div><h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p></div>{action}</div>; }
+export function Empty({ title, description }: { title: string; description: string }) { return <div className="flex min-h-48 flex-col items-center justify-center gap-3 p-6 text-center"><ReceiptText className="size-8 text-primary" strokeWidth={1.5} /><p className="text-sm font-medium">{title}</p><p className="max-w-sm text-xs leading-relaxed text-muted-foreground">{description}</p></div>; }
+export function Status({ order }: { order: Order }) { const done = order.processing === "completed"; const failed = order.payment === "failed" || order.payment === "expired" || order.processing === "failed"; return <span className={cn("inline-flex rounded-full px-3 py-1 text-xs", done ? "bg-green-50 text-green-700" : failed ? "bg-red-50 text-red-700" : "bg-accent text-primary")}>{order.payment === "paid" ? processingLabels[order.processing] : order.payment === "refunded" ? "Gagal · dikembalikan" : paymentLabels[order.payment]}</span>; }
+export function Choice({ label, value, onChange, options, className }: { label: string; value: string; onChange: (value: string) => void; options: { value: string; label: string }[]; className?: string }) { return <Select value={value} onValueChange={onChange}><SelectTrigger aria-label={label} className={cn("w-full rounded-xl bg-white data-[size=default]:h-11", className)}><SelectValue /></SelectTrigger><SelectContent>{options.map(x => <SelectItem key={x.value} value={x.value}>{x.label}</SelectItem>)}</SelectContent></Select>; }
+export function newPurchase(input: Omit<Purchase, "id" | "at">): Purchase { return { ...input, id: `DEMO-${crypto.randomUUID()}`, at: new Date().toISOString() }; }
+export function Checkout({ purchase, close }: { purchase: Purchase | null; close: () => void }) {
+  const { state, dispatch } = useDashboard(); const [outcome, setOutcome] = useState<Outcome>("success"); const [finished, setFinished] = useState(false);
+  if (!purchase) return null;
+  const plan = PLANS.find(p => p.id === purchase.planId);
+  const error = purchaseError(state, purchase);
+  const title = purchase.kind === "topup" ? "Top-up saldo" : purchase.kind === "package" ? "Pembelian paket" : "Pesanan Shield";
+  return <Dialog open onOpenChange={open => { if (!open) close(); }}><DialogContent className="max-h-[85dvh] overflow-y-auto rounded-[24px]"><DialogHeader><DialogTitle>{finished ? "Simulasi selesai" : title}</DialogTitle><DialogDescription>{finished ? "Hasil simulasi sudah dicatat pada dashboard demo." : "Tinjau ringkasan. Transaksi ini hanya simulasi dan tidak memindahkan uang."}</DialogDescription></DialogHeader>{finished ? <div className="flex flex-col items-center gap-4 py-5"><Check className="size-10 text-primary" /><p className="text-sm">{outcome === "success" ? "Pembayaran demo berhasil." : outcome === "failed" ? "Pembayaran demo gagal. Saldo dan kuota tidak berubah." : "Pembayaran demo kedaluwarsa. Saldo dan kuota tidak berubah."}</p><Button size="pill-sm" onClick={close}>Kembali ke dashboard</Button></div> : <><div className="space-y-3 rounded-2xl bg-surface p-4 text-sm"><div className="flex justify-between gap-3"><span className="text-muted-foreground">Metode</span><span>{methodLabels[purchase.method]}</span></div>{plan && <div className="flex justify-between gap-3"><span>Paket {plan.name}</span><span>{plan.checks} pemeriksaan</span></div>}{purchase.document && <p className="break-words">{purchase.document}</p>}<div className="flex justify-between border-t pt-3 font-medium"><span>{purchase.method === "quota" ? "Kuota terpakai" : "Total"}</span><span>{purchase.method === "quota" ? "1 pemeriksaan" : formatRupiah(purchase.amount)}</span></div></div><label className="space-y-2"><span className="text-sm">Skenario pembayaran</span><Choice label="Skenario pembayaran" value={outcome} onChange={v => setOutcome(v as Outcome)} options={[{ value: "success", label: "Berhasil" }, { value: "failed", label: "Gagal" }, { value: "expired", label: "Kedaluwarsa" }]} /></label>{error && <p role="alert" className="text-sm text-destructive">{error}</p>}<Button size="pill" disabled={!!error} onClick={() => { dispatch({ type: "purchase", purchase, outcome }); setFinished(true); toast.success("Simulasi dicatat."); }}>Simulasikan pembayaran<ArrowUpRight /></Button></>}</DialogContent></Dialog>;
+}

@@ -6,7 +6,7 @@ import { countWords, formatBytes, formatNumber } from "@/lib/format";
 export const MAX_FILE_BYTES = 25 * 1024 * 1024;
 export const MIN_WORDS = 250;
 export const MAX_WORDS = 25_000;
-export const PRICE_PER_DOCUMENT = 10_000;
+export { SHIELD_PRICE as PRICE_PER_DOCUMENT } from "@/lib/plans";
 
 export const ACCEPTED_FILES = {
   "application/pdf": [".pdf"],

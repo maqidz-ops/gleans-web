@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { AccountMenu } from "@/components/dashboard/account-menu";
+import { useDashboard } from "@/components/dashboard/provider";
 import { useState } from "react";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
@@ -31,6 +33,7 @@ function SoonBadge() {
 }
 
 export function Navbar() {
+  const { demoActive } = useDashboard();
   const [open, setOpen] = useState(false);
   const [productsOpen, setProductsOpen] = useState(false);
   const [soonName, setSoonName] = useState<string | null>(null);
@@ -92,11 +95,13 @@ export function Navbar() {
               {l.label}
             </Link>
           ))}
-          <Button asChild size="pill-sm" className="w-[100px]">
+          {demoActive ? <AccountMenu /> : <Button asChild size="pill-sm" className="w-[100px]">
             <Link href="/daftar">Daftar</Link>
-          </Button>
+          </Button>}
         </nav>
 
+        <div className="flex items-center gap-1 lg:hidden">
+        {demoActive && <AccountMenu compact />}
         <Button
           variant="ghost"
           size="icon-lg"
@@ -110,6 +115,7 @@ export function Navbar() {
         >
           {open ? <X className="size-6" /> : <Menu className="size-6" />}
         </Button>
+        </div>
       </div>
 
       {open && (
@@ -171,6 +177,7 @@ export function Navbar() {
               </Link>
             ))}
           </nav>
+          {demoActive ? <div className="px-5 py-6"><Button asChild size="pill" className="w-full"><Link href="/dashboard" onClick={() => setOpen(false)}>Dashboard</Link></Button></div> : (
           <div className="mt-6 flex gap-3 px-5 pb-6">
             <Button asChild size="pill" variant="outline" className="flex-1 font-normal">
               <Link href="/masuk" onClick={() => setOpen(false)}>
@@ -183,6 +190,7 @@ export function Navbar() {
               </Link>
             </Button>
           </div>
+          )}
         </div>
       )}
 

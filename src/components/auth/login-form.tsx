@@ -22,9 +22,9 @@ export function LoginForm() {
     defaultValues: { email: "", password: "", remember: true },
   });
 
-  async function onSubmit(values: LoginValues) {
+  async function onSubmit() {
     await new Promise((resolve) => setTimeout(resolve, 600));
-    toast.success(`Selamat datang kembali, ${values.email}. Autentikasi segera hadir.`);
+    toast.info("Autentikasi belum aktif. Gunakan Coba dashboard untuk menjelajahi demo.");
   }
 
   return (
@@ -82,6 +82,7 @@ export function LoginForm() {
           Masuk Sekarang
         </Button>
       </form>
+      <Button asChild variant="outline" size="pill" className="mt-4 w-full"><Link href="/dashboard">Coba dashboard</Link></Button>
     </AuthCard>
   );
 }
