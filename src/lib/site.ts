@@ -24,7 +24,7 @@ export const PRODUCTS = [
     icon: "/images/logo-gleans-cite.svg",
     short: "Cite Generator",
     description: "Membantu menyusun sumber referensi dan buat sitasi dengan berbagai format.",
-    soon: true,
+    soon: false,
   },
   {
     name: "Gleans File",
