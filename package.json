@@ -12,7 +12,8 @@
     "predev": "npm run build:doc-worker",
     "test:file": "npm run build:doc-worker && node scripts/test-file-tools.mjs",
     "test:cite": "node scripts/test-citation.mjs",
-    "test:dashboard": "node scripts/test-dashboard.mjs"
+    "test:dashboard": "node scripts/test-dashboard.mjs",
+    "test:admin": "node scripts/test-admin.mjs"
   },
   "dependencies": {
     "@citation-js/core": "^0.9.0",
