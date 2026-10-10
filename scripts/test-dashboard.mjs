@@ -9,7 +9,7 @@ for (const [name,path] of [['plans','src/lib/plans.ts'],['model','src/lib/dashbo
   const source = (await readFile(path,'utf8')).replace('"../plans"','"./plans.mjs"');
   await writeFile(`${dir}/${name}.mjs`,ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText);
 }
-const {initialDemo,demoReducer,purchaseError,demoSchema} = await import(`${dir}/model.mjs`);
+const {initialDemo,demoReducer,purchaseError,demoSchema,upgradeDemoRetention} = await import(`${dir}/model.mjs`);
 const at = '2026-10-07T12:00:00.000Z';
 const purchase = (kind, extra={}) => ({id:'test-1',kind,amount:10000,method:'qris',at,...extra});
 const apply = (state,p,outcome='success') => demoReducer(state,{type:'purchase',purchase:p,outcome});
@@ -41,9 +41,14 @@ test('invalid requests, insufficient funds and empty quota are rejected',()=>{
 });
 test('pending order settles once; completion cannot later refund',()=>{
  const s=initialDemo(),p=purchase('order',{id:'DEMO-1002'}),paid=apply(s,p);assert.equal(paid.orders.filter(x=>x.id===p.id).length,1);assert.equal(paid.orders[0].words,3200);
- const done=demoReducer(paid,{type:'progress',id:p.id,status:'completed',at});assert.deepEqual(demoReducer(done,{type:'progress',id:p.id,status:'failed',at}),done);
+ const done=demoReducer(paid,{type:'progress',id:p.id,status:'completed',at});assert.equal(done.orders[0].completedAt,at);assert.deepEqual(demoReducer(done,{type:'progress',id:p.id,status:'failed',at}),done);
 });
 test('saved state validates and reset supports empty account',()=>{
  const s=initialDemo(); assert.ok(demoSchema.safeParse(JSON.parse(JSON.stringify(s))).success); assert.equal(demoSchema.safeParse({...s,balance:-1}).success,false);
  const empty=demoReducer(s,{type:'reset',empty:true});assert.equal(empty.orders.length,0);assert.equal(empty.quota,0);assert.equal(empty.balance,0);
+});
+
+test('old completed sample gains expiry without changing unrelated orders',()=>{
+ const state=initialDemo();delete state.orders.find(o=>o.id==='DEMO-1001').completedAt;
+ const next=upgradeDemoRetention(state);assert.equal(next.orders.find(o=>o.id==='DEMO-1001').completedAt,'2026-10-06T09:00:00.000Z');assert.deepEqual(next.orders[0],state.orders[0]);
 });

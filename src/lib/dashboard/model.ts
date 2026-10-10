@@ -7,16 +7,16 @@ export type Outcome = "success" | "failed" | "expired";
 export type Payment = "paid" | "pending" | "failed" | "expired" | "refunded";
 export type Processing = "waiting" | "queued" | "processing" | "completed" | "failed";
 export type Purchase = { id: string; kind: "topup" | "package" | "order"; amount: number; planId?: string; document?: string; method: Method; at: string };
-export type Order = { id: string; document: string; words: number; amount: number; method: Method; payment: Payment; processing: Processing; at: string };
+export type Order = { id: string; document: string; words: number; amount: number; method: Method; payment: Payment; processing: Processing; completedAt?: string; failureReason?: string; at: string };
 export type Transaction = { id: string; title: string; kind: "topup" | "payment" | "refund"; amount: number; method: Method; outcome: Outcome; at: string };
 export type DemoState = { profile: { name: string; email: string; whatsapp: string }; balance: number; quota: number; orders: Order[]; transactions: Transaction[]; settled: string[] };
-export type DemoAction = { type: "purchase"; purchase: Purchase; outcome: Outcome } | { type: "progress"; id: string; status: Processing; at: string } | { type: "profile"; profile: DemoState["profile"] } | { type: "reset"; empty?: boolean };
+export type DemoAction = { type: "purchase"; purchase: Purchase; outcome: Outcome } | { type: "progress"; id: string; status: Processing; failureReason?: string; at: string } | { type: "profile"; profile: DemoState["profile"] } | { type: "reset"; empty?: boolean };
 
 const method = z.enum(["quota", "balance", "qris"]);
 export const demoSchema = z.object({
   profile: z.object({ name: z.string().min(1).max(100), email: z.string().email(), whatsapp: z.string().max(20) }),
   balance: z.number().int().nonnegative(), quota: z.number().int().nonnegative(),
-  orders: z.array(z.object({ id: z.string(), document: z.string(), words: z.number().int().nonnegative(), amount: z.number().int().nonnegative(), method, payment: z.enum(["paid", "pending", "failed", "expired", "refunded"]), processing: z.enum(["waiting", "queued", "processing", "completed", "failed"]), at: z.string().datetime() })),
+  orders: z.array(z.object({ id: z.string(), document: z.string(), words: z.number().int().nonnegative(), amount: z.number().int().nonnegative(), method, payment: z.enum(["paid", "pending", "failed", "expired", "refunded"]), processing: z.enum(["waiting", "queued", "processing", "completed", "failed"]), completedAt: z.string().datetime().optional(), failureReason: z.string().max(500).optional(), at: z.string().datetime() })),
   transactions: z.array(z.object({ id: z.string(), title: z.string(), kind: z.enum(["topup", "payment", "refund"]), amount: z.number().int(), method, outcome: z.enum(["success", "failed", "expired"]), at: z.string().datetime() })),
   settled: z.array(z.string()),
 });
@@ -24,7 +24,7 @@ export function initialDemo(empty = false): DemoState {
   return { profile: { name: "Alya Putri", email: "alya@example.com", whatsapp: "081234567890" }, balance: empty ? 0 : 50_000, quota: empty ? 0 : 2,
     orders: empty ? [] : [
       { id: "DEMO-1002", document: "Proposal penelitian.pdf", words: 3200, amount: SHIELD_PRICE, method: "qris", payment: "pending", processing: "waiting", at: "2026-10-07T08:00:00.000Z" },
-      { id: "DEMO-1001", document: "Makalah metodologi.docx", words: 1800, amount: SHIELD_PRICE, method: "quota", payment: "paid", processing: "completed", at: "2026-10-06T08:00:00.000Z" },
+      { id: "DEMO-1001", document: "Makalah metodologi.docx", words: 1800, amount: SHIELD_PRICE, method: "quota", payment: "paid", processing: "completed", completedAt: "2026-10-06T09:00:00.000Z", at: "2026-10-06T08:00:00.000Z" },
     ], transactions: empty ? [] : [{ id: "seed-topup", title: "Top-up saldo demo", kind: "topup", amount: 50_000, method: "qris", outcome: "success", at: "2026-10-05T08:00:00.000Z" }], settled: [] };
 }
 export function purchaseError(state: DemoState, p: Purchase): string | null {
@@ -57,6 +57,10 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
   if (order.processing === action.status) return state;
   const refund = action.status === "failed";
   return { ...state, balance: state.balance + (refund && order.method === "balance" ? order.amount : 0), quota: state.quota + (refund && order.method === "quota" ? 1 : 0),
-    orders: state.orders.map(x => x.id === order.id ? { ...x, processing: action.status, payment: refund ? "refunded" : x.payment } : x),
+    orders: state.orders.map(x => x.id === order.id ? { ...x, processing: action.status, ...(action.status === "completed" ? { completedAt: action.at } : {}), ...(refund ? { failureReason: action.failureReason || "Pemeriksaan gagal. Silakan hubungi bantuan." } : {}), payment: refund ? "refunded" : x.payment } : x),
     transactions: refund ? [{ id: `refund-${order.id}`, title: `Pengembalian · ${order.document}`, kind: "refund", amount: order.amount, method: order.method, outcome: "success", at: action.at }, ...state.transactions] : state.transactions };
+}
+
+export function upgradeDemoRetention(state: DemoState): DemoState {
+  return { ...state, orders: state.orders.map(order => order.id === "DEMO-1001" && order.processing === "completed" && !order.completedAt ? { ...order, completedAt: "2026-10-06T09:00:00.000Z" } : order) };
 }
