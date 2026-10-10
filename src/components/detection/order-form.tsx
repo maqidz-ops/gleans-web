@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { CHECKOUT_PREVIEW_KEY } from "@/lib/payment-preview";
 import { useDropzone } from "react-dropzone";
 import { Loader2, X } from "lucide-react";
 import { toast } from "sonner";
@@ -25,6 +27,7 @@ import { cn } from "@/lib/utils";
 type Document = { file: File; words: number };
 
 export function OrderForm() {
+  const router = useRouter();
   const [whatsapp, setWhatsapp] = useState("");
   const [whatsappError, setWhatsappError] = useState<string | null>(null);
   const [promoInput, setPromoInput] = useState("");
@@ -102,7 +105,16 @@ export function OrderForm() {
       toast.error("Unggah dokumen yang mau diperiksa.");
       return;
     }
-    toast.info("Halaman pembayaran segera hadir. Pesananmu belum dikirim.");
+    try {
+      sessionStorage.setItem(CHECKOUT_PREVIEW_KEY, JSON.stringify({
+        id: `GLS-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
+        amount: total,
+        document: document.file.name,
+      }));
+      router.push("/pembayaran");
+    } catch {
+      toast.error("Tidak dapat membuka pembayaran. Aktifkan penyimpanan browser lalu coba kembali.");
+    }
   }
 
   return (
