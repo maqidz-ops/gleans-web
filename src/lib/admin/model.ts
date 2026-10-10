@@ -12,7 +12,7 @@ export const blogSchema = z.object({ id: text, title: text, slug: z.string().reg
 export const promoSchema = z.object({ id: text, name: text, title: text, type: z.enum(["Banner", "Popup", "Kode promo"]), code: z.string().max(40), discount: money, start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), active: z.boolean() });
 export const adminMemberSchema = z.object({id:text,name:text,email:z.string().email(),role:z.enum(["Owner","Editor","Operator"]),status:z.enum(["Aktif","Diundang","Dicabut"])});
 export const defaultAdmins = [{id:"ADMIN-001",name:"Admin Demo",email:"owner@example.com",role:"Owner" as const,status:"Aktif" as const}];
-export const adminSchema = z.object({ demoVersion:z.number().default(1), admins:z.array(adminMemberSchema).default(defaultAdmins), customers: z.array(customerSchema), orders: z.array(orderSchema), plans: z.array(planSchema), blogs: z.array(blogSchema), promos: z.array(promoSchema), transactions: z.array(z.object({ id: text, customerId: text, title: text, amount: z.number().int(), status: z.enum(["Berhasil", "Menunggu", "Refund"]), date: text })), settings: z.object({ email: z.string().email(), whatsapp: text, maxMb: z.number().int().min(1).max(100), minWords: z.number().int().min(1), maxWords: z.number().int().min(1), shieldPrice: money, shield: z.boolean(), cite: z.boolean(), file: z.boolean() }), activity: z.array(z.object({ id: text, action: z.string().min(1).max(2200), actor:z.string().default("Admin Demo"), object:z.string().default("Demo admin"), at: z.string().datetime() })) });
+export const adminSchema = z.object({ demoVersion:z.number().default(1), admins:z.array(adminMemberSchema).default(defaultAdmins), customers: z.array(customerSchema), orders: z.array(orderSchema), plans: z.array(planSchema), blogs: z.array(blogSchema), promos: z.array(promoSchema), transactions: z.array(z.object({ id: text, customerId: text, title: text, amount: z.number().int(), status: z.enum(["Berhasil", "Menunggu", "Refund"]), date: text })), settings: z.object({ email: z.string().email(), whatsapp: text, maxMb: z.number().int().min(1).max(100), minWords: z.number().int().min(1), maxWords: z.number().int().min(1), shieldPrice: money, shield: z.boolean(), cite: z.boolean(), file: z.boolean() }), activity: z.array(z.object({ id: text, action: z.string().min(1).max(2200), actor:z.string().default("Gleans"), object:z.string().default("Demo admin"), at: z.string().datetime() })) });
 export type AdminState = z.infer<typeof adminSchema>;
 export type Collection = "customers" | "orders" | "plans" | "blogs" | "promos";
 export type RecordData = AdminState[Collection][number];
@@ -28,7 +28,7 @@ export function initialAdmin(now = Date.now()): AdminState {
     promos: [{ id: "PROMO-001", name: "Promo mahasiswa Oktober", title: "Mulai tulisanmu bersama Gleans", type: "Banner", code: "", discount: 0, start: "2026-10-01", end: "2026-10-31", active: true }, { id: "PROMO-002", name: "Kode sambutan", title: "Diskon pemeriksaan pertama", type: "Kode promo", code: "GLEANSBARU", discount: 2000, start: "2026-10-01", end: "2026-10-31", active: false }],
     transactions: [{ id: "TX-001", customerId: "USR-001", title: "Top-up saldo", amount: 50000, status: "Berhasil", date: "2026-10-08" }, { id: "TX-002", customerId: "USR-002", title: "Paket Starter", amount: 45000, status: "Berhasil", date: "2026-10-08" }, { id: "TX-003", customerId: "USR-003", title: "Pembayaran Shield", amount: 10000, status: "Menunggu", date: "2026-10-07" }],
     settings: { email: "team@gleans.my.id", whatsapp: "6281998096254", maxMb: 25, minWords: 250, maxWords: 25000, shieldPrice: 10000, shield: true, cite: true, file: true },
-    activity: [{ id: "ACT-001", action: "Data contoh admin disiapkan", actor:"Admin Demo", object:"Demo admin", at: "2026-10-08T01:00:00.000Z" }],
+    activity: [{ id: "ACT-001", action: "Data contoh admin disiapkan", actor:"Gleans", object:"Demo admin", at: "2026-10-08T01:00:00.000Z" }],
   };
 }
 export function saveAdminRecord(state: AdminState, collection: Collection, record: RecordData, reason = ""): AdminState {
@@ -44,7 +44,7 @@ export function saveAdminRecord(state: AdminState, collection: Collection, recor
   if (collection === "promos") { const promo = promoSchema.parse(parsed); if (promo.end < promo.start) throw new Error("Tanggal selesai harus setelah tanggal mulai."); if (promo.type === "Kode promo" && !promo.code.trim()) throw new Error("Isi kode promo."); }
   if (collection === "orders") { const order = orderSchema.parse(parsed); if (!state.customers.some(c => c.id === order.customerId)) throw new Error("Pelanggan tidak ditemukan."); if (!["Belum diproses", "Gagal"].includes(order.processing) && order.payment !== "Berhasil") throw new Error("Pesanan harus terbayar sebelum pemeriksaan."); if (order.delivery === "Terkirim" && order.processing !== "Selesai") throw new Error("Laporan hanya bisa terkirim setelah pemeriksaan selesai."); }
   const items = state[collection];
-  const next = { ...state, [collection]: items.some(x => x.id === parsed.id) ? items.map(x => x.id === parsed.id ? parsed : x) : [parsed, ...items], activity: [{ id: crypto.randomUUID(), action: `Memperbarui${reason.trim() ? `: ${reason.trim()}` : ""}`, actor:"Admin Demo", object:parsed.id, at: new Date().toISOString() }, ...state.activity].slice(0,100) };
+  const next = { ...state, [collection]: items.some(x => x.id === parsed.id) ? items.map(x => x.id === parsed.id ? parsed : x) : [parsed, ...items], activity: [{ id: crypto.randomUUID(), action: `Memperbarui${reason.trim() ? `: ${reason.trim()}` : ""}`, actor:"Gleans", object:parsed.id, at: new Date().toISOString() }, ...state.activity].slice(0,100) };
   return adminSchema.parse(next);
 }
 
@@ -54,7 +54,7 @@ export function inviteDemoAdmin(state:AdminState,member:{name:string;email:strin
  const existing=state.admins.find(a=>a.email.toLowerCase()===parsed.email.toLowerCase());
  if(existing && existing.status!=="Dicabut")throw new Error("Email sudah ada dalam daftar admin.");
  if(existing) parsed.id=existing.id;
- return adminSchema.parse({...state,admins:existing?state.admins.map(a=>a.id===existing.id?parsed:a):[...state.admins,parsed],activity:[{id:crypto.randomUUID(),action:"Membuat undangan demo",actor:"Admin Demo",object:parsed.email,at:new Date().toISOString()},...state.activity].slice(0,100)});
+ return adminSchema.parse({...state,admins:existing?state.admins.map(a=>a.id===existing.id?parsed:a):[...state.admins,parsed],activity:[{id:crypto.randomUUID(),action:"Membuat undangan demo",actor:"Gleans",object:parsed.email,at:new Date().toISOString()},...state.activity].slice(0,100)});
 }
 
 export function upgradeAdminDemo(state: AdminState): AdminState {
@@ -76,6 +76,6 @@ export function revokeDemoAdmin(state: AdminState, id: string): AdminState {
   if (member.status === "Dicabut") return state;
   return adminSchema.parse({ ...state,
     admins: state.admins.map(a => a.id === id ? { ...a, status: "Dicabut" } : a),
-    activity: [{ id: crypto.randomUUID(), action: member.status === "Diundang" ? "Membatalkan undangan demo" : "Mencabut akses admin demo", actor: "Admin Demo", object: member.email, at: new Date().toISOString() }, ...state.activity].slice(0, 100),
+    activity: [{ id: crypto.randomUUID(), action: member.status === "Diundang" ? "Membatalkan undangan demo" : "Mencabut akses admin demo", actor: "Gleans", object: member.email, at: new Date().toISOString() }, ...state.activity].slice(0, 100),
   });
 }

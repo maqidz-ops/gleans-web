@@ -82,7 +82,7 @@
 }
 
 /* Admin appearance is scoped so the public website keeps its own colors. */
-html[data-admin-theme="dark"] :is(.admin-shell, [data-slot="dropdown-menu-content"], [data-slot="dialog-content"], [data-slot="sheet-content"]) {
+html[data-admin-theme="dark"] :is(.admin-shell, .dashboard-shell, [data-slot="dropdown-menu-content"], [data-slot="dialog-content"], [data-slot="sheet-content"]) {
   --background: #111827;
   --foreground: #f3f4f6;
   --card: #182233;
@@ -106,13 +106,13 @@ html[data-admin-theme="dark"] :is(.admin-shell, [data-slot="dropdown-menu-conten
   color-scheme: dark;
 }
 
-html[data-admin-theme="dark"] .admin-shell { background-color: var(--background); }
-html[data-admin-theme="dark"] :is(.admin-shell, [data-slot="dialog-content"]) .bg-white { background-color: var(--card); }
+html[data-admin-theme="dark"] :is(.admin-shell, .dashboard-shell) { background-color: var(--background); }
+html[data-admin-theme="dark"] :is(.admin-shell, .dashboard-shell, [data-slot="dialog-content"]) .bg-white { background-color: var(--card); }
 html[data-admin-theme="dark"] .admin-shell a[aria-label="Gleans Admin"] img { filter: brightness(0) invert(1); }
-html[data-admin-theme="dark"] :is(.admin-shell, [data-slot="dialog-content"]) :is(.bg-emerald-50, .bg-red-50, .bg-amber-50) { background-color: var(--surface); }
-html[data-admin-theme="dark"] :is(.admin-shell, [data-slot="dialog-content"]) :is(.text-emerald-700, .text-emerald-600) { color: #6ee7b7; }
-html[data-admin-theme="dark"] :is(.admin-shell, [data-slot="dialog-content"]) :is(.text-red-700, .text-red-600) { color: #fca5a5; }
-html[data-admin-theme="dark"] :is(.admin-shell, [data-slot="dialog-content"]) :is(.text-amber-700, .text-amber-600) { color: #fcd34d; }
+html[data-admin-theme="dark"] :is(.admin-shell, .dashboard-shell, [data-slot="dialog-content"]) :is(.bg-emerald-50, .bg-red-50, .bg-amber-50) { background-color: var(--surface); }
+html[data-admin-theme="dark"] :is(.admin-shell, .dashboard-shell, [data-slot="dialog-content"]) :is(.text-emerald-700, .text-emerald-600) { color: #6ee7b7; }
+html[data-admin-theme="dark"] :is(.admin-shell, .dashboard-shell, [data-slot="dialog-content"]) :is(.text-red-700, .text-red-600) { color: #fca5a5; }
+html[data-admin-theme="dark"] :is(.admin-shell, .dashboard-shell, [data-slot="dialog-content"]) :is(.text-amber-700, .text-amber-600) { color: #fcd34d; }
 
 @layer base {
   * {
@@ -207,3 +207,5 @@ html[data-admin-theme="dark"] :is(.admin-shell, [data-slot="dialog-content"]) :i
     padding-block: 6rem;
   }
 }
+
+html[data-admin-theme="dark"] .dashboard-shell a[aria-label="Gleans - Beranda"] img { filter: brightness(0) invert(1); }

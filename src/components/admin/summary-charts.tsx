@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronDown } from "lucide-react";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem } from "@/components/ui/dropdown-menu";
+import { AdminFilterDropdown } from "./filter-dropdown";
 import { formatRupiah } from "@/lib/format";
 import { summaryDemoHistory } from "@/lib/admin/summary-demo";
 
@@ -27,7 +26,7 @@ export function AdminSummaryCharts() {
   const income = dates.map(d => ({ ...d, value: history.find(p => p.date === d.date)?.income || 0 }));
   const orders = dates.map(d => ({ ...d, value: history.find(p => p.date === d.date)?.orders || 0 }));
   return <section className="mt-7" aria-label="Grafik pendapatan dan pesanan">
-    <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><h2 className="font-semibold">Tren {days} hari terakhir</h2><div className="ml-auto flex flex-wrap items-center justify-end gap-3"><DropdownMenu><DropdownMenuTrigger asChild><button type="button" aria-label={`Periode grafik: ${days} hari`} className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full border bg-white px-4 text-sm outline-none transition-colors hover:bg-surface focus-visible:ring-2 focus-visible:ring-primary data-[state=open]:border-primary data-[state=open]:ring-2 data-[state=open]:ring-primary/15">{days} hari<ChevronDown aria-hidden="true" className="size-4 text-muted-foreground"/></button></DropdownMenuTrigger><DropdownMenuContent align="end" sideOffset={8} className="w-44 rounded-2xl border bg-white p-1.5 shadow-lg"><DropdownMenuRadioGroup aria-label="Periode grafik" value={String(days)} onValueChange={value=>setDays(Number(value))}>{[7,14,30].map(n=><DropdownMenuRadioItem key={n} value={String(n)} className="min-h-11 cursor-pointer rounded-xl pl-3 pr-9 text-sm data-[state=checked]:bg-accent data-[state=checked]:font-medium data-[state=checked]:text-primary focus:bg-accent focus:text-primary">{n} hari</DropdownMenuRadioItem>)}</DropdownMenuRadioGroup></DropdownMenuContent></DropdownMenu></div></div>
+    <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><h2 className="font-semibold">Tren {days} hari terakhir</h2><div className="ml-auto flex flex-wrap items-center justify-end gap-3"><AdminFilterDropdown label={`Periode grafik: ${days} hari`} value={`${days} hari`} options={["7 hari","14 hari","30 hari"]} onChange={value=>setDays(parseInt(value,10))}/></div></div>
     <div className="grid min-w-0 gap-4 xl:grid-cols-2">
       <BarChart title="TOTAL PENDAPATAN" points={income} money/>
       <BarChart title="TOTAL PESANAN" points={orders}/>

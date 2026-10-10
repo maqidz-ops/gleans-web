@@ -33,3 +33,5 @@ Pencabutan akses admin mengubah status menjadi Dicabut, menghilangkan admin dari
 Ringkasan dan statistik Pesanan memakai agregat demo 1.200 mahasiswa × 2 pemeriksaan × Rp 10.000/file: 2.400 pesanan dan Rp 24.000.000. Grafik harian mengikuti tarif yang sama; tabel pesanan tetap berisi contoh yang dapat ditinjau. Riwayat transaksi ditampilkan sebagai tabel dengan filter status.
 
 Profil sidebar memakai logo Gleans, nama dan email Owner demo. Menu profil menyediakan System/Light/Dark dengan pilihan tersimpan lokal; tampilan gelap dibatasi pada admin. Keluar mengarahkan ke halaman Masuk dan belum mengakhiri sesi autentikasi server. Undangan admin tetap simulasi lokal tanpa pengiriman email.
+
+Login admin memakai InsForge melalui Server Actions. Layout admin memverifikasi identitas akun di server, dan middleware memperbarui sesi. Konfigurasi lokal memerlukan NEXT_PUBLIC_INSFORGE_URL, NEXT_PUBLIC_INSFORGE_ANON_KEY, GLEANS_ADMIN_EMAIL, dan GLEANS_ADMIN_USER_ID. Password tidak disimpan di source code. Akun perlu menyelesaikan verifikasi email sebelum dapat masuk; undangan admin di tab Pengaturan masih simulasi lokal.

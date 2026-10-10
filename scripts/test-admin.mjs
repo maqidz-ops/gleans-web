@@ -46,7 +46,7 @@ test('promotion schedules and codes validate before saving',()=>{
 
 test('saved demo data migrates admin and activity defaults',()=>{
  const state=initialAdmin();delete state.admins;delete state.activity[0].actor;delete state.activity[0].object;
- const restored=adminSchema.parse(state);assert.equal(restored.admins[0].role,'Owner');assert.equal(restored.activity[0].actor,'Admin Demo');
+ const restored=adminSchema.parse(state);assert.equal(restored.admins[0].role,'Owner');assert.equal(restored.activity[0].actor,'Gleans');
 });
 test('demo invitations validate roles, reject duplicate emails, and log activity',()=>{
  const state=initialAdmin(),member={name:'Editor Test',email:'editor@example.com',role:'Editor'};
