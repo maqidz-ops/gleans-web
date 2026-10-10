@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem } from "@/components/ui/dropdown-menu";
 import { formatRupiah } from "@/lib/format";
 import { summaryDemoHistory } from "@/lib/admin/summary-demo";
 
@@ -26,7 +27,7 @@ export function AdminSummaryCharts() {
   const income = dates.map(d => ({ ...d, value: history.find(p => p.date === d.date)?.income || 0 }));
   const orders = dates.map(d => ({ ...d, value: history.find(p => p.date === d.date)?.orders || 0 }));
   return <section className="mt-7" aria-label="Grafik pendapatan dan pesanan">
-    <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><h2 className="font-semibold">Tren {days} hari terakhir</h2><div className="ml-auto flex flex-wrap items-center justify-end gap-3"><p className="text-xs text-muted-foreground">{dates[0].label} – {dates[days - 1].label} · WIB</p><div className="relative flex h-10 items-center gap-2 rounded-full border bg-white px-4 text-sm focus-within:ring-2 focus-within:ring-primary"><span aria-hidden="true">{days} hari</span><ChevronDown aria-hidden="true" className="size-4 shrink-0 text-muted-foreground"/><select aria-label="Periode grafik" value={days} onChange={e => setDays(Number(e.target.value))} className="absolute inset-0 h-full w-full cursor-pointer rounded-full opacity-0">{[7, 14, 30].map(n => <option key={n} value={n}>{n} hari</option>)}</select></div></div></div>
+    <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><h2 className="font-semibold">Tren {days} hari terakhir</h2><div className="ml-auto flex flex-wrap items-center justify-end gap-3"><DropdownMenu><DropdownMenuTrigger asChild><button type="button" aria-label={`Periode grafik: ${days} hari`} className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full border bg-white px-4 text-sm outline-none transition-colors hover:bg-surface focus-visible:ring-2 focus-visible:ring-primary data-[state=open]:border-primary data-[state=open]:ring-2 data-[state=open]:ring-primary/15">{days} hari<ChevronDown aria-hidden="true" className="size-4 text-muted-foreground"/></button></DropdownMenuTrigger><DropdownMenuContent align="end" sideOffset={8} className="w-44 rounded-2xl border bg-white p-1.5 shadow-lg"><DropdownMenuRadioGroup aria-label="Periode grafik" value={String(days)} onValueChange={value=>setDays(Number(value))}>{[7,14,30].map(n=><DropdownMenuRadioItem key={n} value={String(n)} className="min-h-11 cursor-pointer rounded-xl pl-3 pr-9 text-sm data-[state=checked]:bg-accent data-[state=checked]:font-medium data-[state=checked]:text-primary focus:bg-accent focus:text-primary">{n} hari</DropdownMenuRadioItem>)}</DropdownMenuRadioGroup></DropdownMenuContent></DropdownMenu></div></div>
     <div className="grid min-w-0 gap-4 xl:grid-cols-2">
       <BarChart title="TOTAL PENDAPATAN" points={income} money/>
       <BarChart title="TOTAL PESANAN" points={orders}/>
@@ -41,7 +42,7 @@ function BarChart({ title, points, money = false }: { title: string; points: Poi
   const ceiling = money ? Math.ceil(maximum / step) * step : Math.max(2, Math.ceil(maximum / 2) * 2);
   const format = (value: number) => money ? formatRupiah(value) : `${value} pesanan`;
   return <article className="min-w-0 rounded-[24px] border bg-white p-4 sm:p-5">
-    <p className="text-2xl font-semibold">{format(total)}</p><h3 className="mt-2 text-xs font-medium text-muted-foreground">{title}</h3>
+    <p className="text-2xl font-semibold">{money ? formatRupiah(total) : new Intl.NumberFormat("id-ID").format(total)}</p><h3 className="mt-2 text-xs font-medium text-muted-foreground">{title}</h3>
     <div className="mt-6 overflow-x-auto pb-2" role="region" aria-label={`Grafik ${title}`} tabIndex={points.length > 7 ? 0 : undefined}><div className="flex gap-2" style={{ minWidth: points.length > 7 ? points.length * 48 + 48 : undefined }} role="group" aria-label={title}>
       <div aria-hidden="true" className="flex h-44 w-10 shrink-0 flex-col justify-between text-[10px] text-muted-foreground"><span>{money ? shortMoney(ceiling) : ceiling}</span><span>{money ? shortMoney(ceiling / 2) : Math.floor(ceiling / 2)}</span><span>0</span></div>
       <div className="relative grid min-w-0 flex-1 gap-2" style={{ gridTemplateColumns: `repeat(${points.length}, minmax(0, 1fr))` }}>

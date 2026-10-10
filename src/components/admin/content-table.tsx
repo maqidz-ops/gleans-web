@@ -36,11 +36,11 @@ export function AdminContentTable({ module, items, onEdit, onPreview, onToggle }
   onToggle: (item: RecordData) => void;
 }) {
   const isBlog = module === "blog";
-  const columns = isBlog ? ["ARTIKEL", "STATUS", "UNGGULAN", "AKSI"] : ["KAMPANYE", "JENIS", "PERIODE", "STATUS", "AKTIFKAN", "AKSI"];
+  const columns = isBlog ? ["ARTIKEL", "KATEGORI", "STATUS", "UNGGULAN", "AKSI"] : ["KAMPANYE", "JENIS", "PERIODE", "STATUS", "AKTIFKAN", "AKSI"];
   return <>
     <p className="mb-3 text-xs text-muted-foreground sm:hidden">Geser tabel untuk melihat semua kolom.</p>
     <div role="region" aria-label={`Tabel ${isBlog ? "blog" : "promosi"}`} tabIndex={0} className="overflow-x-auto rounded-2xl border outline-none focus-visible:ring-2 focus-visible:ring-primary">
-      <table className={`w-full text-sm ${isBlog ? "min-w-[700px]" : "min-w-[880px]"}`}>
+      <table className={`w-full text-sm ${isBlog ? "min-w-[800px]" : "min-w-[880px]"}`}>
         <caption className="sr-only">Daftar {isBlog ? "artikel" : "promosi"} demo Gleans.</caption>
         <thead className="bg-surface text-xs text-muted-foreground"><tr>{columns.map(x => <th key={x} scope="col" className={`whitespace-nowrap px-4 py-4 text-left font-medium ${x === "AKSI" ? "sticky right-0 bg-surface" : ""}`}>{x}</th>)}</tr></thead>
         <tbody className="divide-y">{items.map(item => {
@@ -49,7 +49,8 @@ export function AdminContentTable({ module, items, onEdit, onPreview, onToggle }
           const title = blog?.title || promo?.name || "";
           const status = promo ? campaignStatus(promo) : blog?.status || "";
           return <tr key={item.id} className="hover:bg-surface/50">
-            <td className={cell+" min-w-64 max-w-md"}><p className="break-words font-semibold">{title}</p><p className="mt-1 break-all text-xs text-muted-foreground">{blog ? `/blog/${blog.slug}` : promo?.title}</p>{blog?.summary && <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{blog.summary}</p>}{promo?.type === "Kode promo" && <p className="mt-2 text-xs text-primary">{promo.code} · {formatRupiah(promo.discount)}</p>}</td>
+            <td className={cell+" min-w-64 max-w-md"}><p className="break-words font-semibold">{title}</p><p className="mt-1 break-all text-xs text-muted-foreground">{blog ? `/blog/${blog.slug}` : promo?.title}</p>{promo?.type === "Kode promo" && <p className="mt-2 text-xs text-primary">{promo.code} · {formatRupiah(promo.discount)}</p>}</td>
+            {blog && <td className={cell+" whitespace-nowrap"}><Badge>{blog.category}</Badge></td>}
             {promo && <><td className={cell+" whitespace-nowrap"}>{promo.type}</td><td className={cell+" whitespace-nowrap text-xs leading-6"}>{day(promo.start)}<br/><span className="text-muted-foreground">s.d. {day(promo.end)}</span></td></>}
             <td className={cell}><Badge active={status === "Terbit" || status === "Aktif"}>{status}</Badge></td>
             <td className={cell}><Toggle label={isBlog ? `Artikel unggulan ${title}` : `Aktifkan promosi ${title}`} checked={blog ? blog.featured : !!promo?.active} onChange={() => onToggle(item)}/></td>

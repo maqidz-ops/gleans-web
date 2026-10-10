@@ -9,6 +9,7 @@ import { formatRupiah } from "@/lib/format";
 import { type AdminState } from "@/lib/admin/model";
 import { useAdmin } from "./provider";
 import { shieldAccess } from "@/lib/shield-retention";
+import { summaryDemo } from "@/lib/admin/summary-demo";
 import { card } from "./overview";
 
 type Order = AdminState["orders"][number];
@@ -44,7 +45,7 @@ export function AdminRecordsTable({ module }: { module: "pesanan" | "pelanggan" 
   const opened = useRef<string | null>(null);
   const [query, setQuery] = useState("");
   const [payment, setPayment] = useState("Semua");
-  const [processing, setProcessing] = useState(params.get("status") === "proses" ? "Berjalan" : "Semua");
+  const [processing, setProcessing] = useState(params.get("status") === "proses" ? "Berjalan" : params.get("status") === "selesai" ? "Selesai" : params.get("status") === "retry" ? "Retry" : "Semua");
   const [delivery, setDelivery] = useState("Semua");
   const [attention, setAttention] = useState(params.get("status") === "gagal");
   const [selected, setSelected] = useState<string | null>(null);
@@ -73,17 +74,17 @@ export function AdminRecordsTable({ module }: { module: "pesanan" | "pelanggan" 
     const c = customerFor(o.customerId);
     return [o.id, o.document, c?.name, c?.email, c?.whatsapp].join(" ").toLowerCase().includes(needle)
       && (payment === "Semua" || o.payment === payment)
-      && (processing === "Semua" || o.processing === processing || processing === "Berjalan" && ["Antre", "Diproses"].includes(o.processing))
+      && (processing === "Semua" || o.processing === processing || processing === "Berjalan" && ["Antre", "Diproses"].includes(o.processing) || processing === "Retry" && o.failureReason === "rate_limit" && o.processing === "Antre")
       && (delivery === "Semua" || o.delivery === delivery)
       && (!attention || o.processing === "Gagal" || o.delivery === "Gagal dikirim");
   });
   const customers = state.customers.filter(c => [c.id, c.name, c.email, c.whatsapp].join(" ").toLowerCase().includes(needle));
   const count = isOrder ? orders.length : customers.length;
   const metrics = isOrder ? [
-    ["TOTAL PENDAPATAN", formatRupiah(state.orders.filter(o => o.payment === "Berhasil").reduce((sum, o) => sum + o.amount, 0))],
-    ["TOTAL PESANAN", state.orders.length],
-    ["TOTAL ANTREAN", state.orders.filter(o => ["Antre", "Diproses"].includes(o.processing)).length],
-    ["PERLU TINDAKAN", state.orders.filter(o => o.processing === "Gagal" || o.delivery === "Gagal dikirim").length],
+    ["TOTAL PENDAPATAN", formatRupiah(summaryDemo.income)],
+    ["TOTAL PESANAN", new Intl.NumberFormat("id-ID").format(summaryDemo.orders)],
+    ["TOTAL ANTREAN", summaryDemo.queue],
+    ["TOTAL GAGAL", state.orders.filter(o => o.processing === "Gagal" || o.delivery === "Gagal dikirim").length],
   ] : [
     ["TOTAL PELANGGAN", state.customers.length],
     ["TOTAL SALDO", formatRupiah(state.customers.reduce((sum, c) => sum + c.balance, 0))],
@@ -99,13 +100,13 @@ export function AdminRecordsTable({ module }: { module: "pesanan" | "pelanggan" 
         <div className={`flex ${isOrder ? "h-10" : "h-11"} min-w-0 items-center gap-2 rounded-xl bg-surface px-4`}><Search className="size-4 shrink-0 text-muted-foreground"/><input aria-label={`Cari ${title}`} placeholder={isOrder ? "Cari ID, dokumen, nama, atau WhatsApp…" : "Cari nama, email, ID, atau WhatsApp…"} value={query} onChange={e => setQuery(e.target.value)} className="w-full min-w-0 bg-transparent text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"/></div>
         {isOrder && <div className="grid gap-3 sm:grid-cols-3">
           <select aria-label="Filter pembayaran" value={payment} onChange={e => setPayment(e.target.value)} className={control}><option value="Semua">Semua pembayaran</option>{["Menunggu", "Berhasil", "Kedaluwarsa", "Refund"].map(x => <option key={x}>{x}</option>)}</select>
-          <select aria-label="Filter pemeriksaan" value={processing} onChange={e => setProcessing(e.target.value)} className={control}><option value="Semua">Semua pemeriksaan</option><option value="Berjalan">Antre & diproses</option>{["Belum diproses", "Antre", "Diproses", "Selesai", "Gagal"].map(x => <option key={x}>{x}</option>)}</select>
+          <select aria-label="Filter pemeriksaan" value={processing} onChange={e => setProcessing(e.target.value)} className={control}><option value="Semua">Semua pemeriksaan</option><option value="Berjalan">Antre & diproses</option><option value="Retry">Menunggu retry</option>{["Belum diproses", "Antre", "Diproses", "Selesai", "Gagal"].map(x => <option key={x}>{x}</option>)}</select>
           <select aria-label="Filter laporan" value={delivery} onChange={e => setDelivery(e.target.value)} className={control}><option value="Semua">Semua laporan</option>{["Belum dikirim", "Terkirim", "Gagal dikirim"].map(x => <option key={x}>{x}</option>)}</select>
         </div>}
         {isOrder && <label className="flex items-center gap-2 text-xs text-muted-foreground"><input type="checkbox" checked={attention} onChange={e => setAttention(e.target.checked)}/>Hanya yang perlu tindakan</label>}
       </div>
       <div className="mb-3 flex flex-wrap justify-between gap-2 text-xs text-muted-foreground"><p>{count} {title.toLowerCase()} ditemukan</p><p className="sm:hidden">Geser tabel untuk melihat semua kolom.</p></div>
-      <div role="region" aria-label={`Tabel ${title.toLowerCase()}`} tabIndex={0} className={`overflow-x-auto rounded-2xl ${isOrder ? "" : "border"} outline-none focus-visible:ring-2 focus-visible:ring-primary`}>
+      <div role="region" aria-label={`Tabel ${title.toLowerCase()}`} tabIndex={0} className={`overflow-x-auto rounded-2xl border outline-none focus-visible:ring-2 focus-visible:ring-primary`}>
         <table className={`w-full text-sm ${isOrder ? "min-w-[1060px]" : "min-w-[840px]"}`}>
           <caption className="sr-only">Daftar {title.toLowerCase()} demo. Gunakan tombol Detail untuk melihat informasi.</caption>
           <thead className="bg-surface text-xs text-muted-foreground"><tr>{(isOrder ? ["PESANAN", "PELANGGAN", "DOKUMEN", "TOTAL", "PEMBAYARAN", "PEMERIKSAAN", "LAPORAN", "AKSI"] : ["PELANGGAN", "KONTAK", "SALDO", "KUOTA", "PESANAN", "AKSI"]).map(x => <th key={x} scope="col" className={`whitespace-nowrap px-4 py-4 text-left font-medium ${x === "AKSI" ? "sticky right-0 bg-surface" : ""}`}>{x}</th>)}</tr></thead>

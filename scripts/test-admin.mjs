@@ -8,7 +8,7 @@ after(() => rm(dir, { recursive: true, force: true }));
 await writeFile(`${dir}/model.mjs`, ts.transpileModule(await readFile('src/lib/admin/model.ts','utf8'), {compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText);
 await writeFile(`${dir}/media.mjs`,ts.transpileModule(await readFile('src/lib/admin/media.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText);
 const {validateMedia}=await import(`${dir}/media.mjs`);
-const {initialAdmin,saveAdminRecord,adminSchema,ADMIN_STORAGE_KEY,inviteDemoAdmin,upgradeAdminDemo} = await import(`${dir}/model.mjs`);
+const {initialAdmin,saveAdminRecord,adminSchema,ADMIN_STORAGE_KEY,inviteDemoAdmin,revokeDemoAdmin,upgradeAdminDemo} = await import(`${dir}/model.mjs`);
 await writeFile(`${dir}/retention.mjs`,ts.transpileModule(await readFile('src/lib/shield-retention.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText);
 const {shieldAccess,SHIELD_RETENTION_MS}=await import(`${dir}/retention.mjs`);
 test('demo state round-trips with its own storage namespace',()=>{
@@ -72,6 +72,34 @@ test('Shield download expires exactly 24 hours after completion',()=>{
 test('demo upgrade preserves edits and adds retention scenarios only once',()=>{
  const old=initialAdmin(); old.demoVersion=1; old.orders=old.orders.slice(0,4);delete old.orders[1].completedAt;old.customers[0].name='Edited';
  const next=upgradeAdminDemo(old);assert.equal(next.customers[0].name,'Edited');assert.equal(next.orders.length,6);
- assert.ok(next.orders[1].completedAt);assert.equal(next.orders[3].failureReason,'api_quota');
+ assert.ok(next.orders[1].completedAt);assert.equal(next.orders[3].failureReason,'timeout');
  assert.deepEqual(upgradeAdminDemo(next),next);
+});
+
+test('revocation preserves history, blocks Owner, and allows re-invitation',()=>{
+ const invited=inviteDemoAdmin(initialAdmin(),{name:'Operator Test',email:'operator@example.com',role:'Operator'}), id=invited.admins.at(-1).id;
+ const revoked=revokeDemoAdmin(invited,id);assert.equal(revoked.admins.at(-1).status,'Dicabut');assert.match(revoked.activity[0].action,/Membatalkan/);
+ assert.deepEqual(revokeDemoAdmin(revoked,id),revoked);assert.deepEqual(revoked.orders,invited.orders);
+ assert.throws(()=>revokeDemoAdmin(revoked,'ADMIN-001'),/Owner/);assert.throws(()=>revokeDemoAdmin(revoked,'missing'),/ditemukan/);
+ const again=inviteDemoAdmin(revoked,{name:'Operator Test',email:'operator@example.com',role:'Editor'});assert.equal(again.admins.length,revoked.admins.length);assert.equal(again.admins.at(-1).status,'Diundang');
+ again.admins.at(-1).status='Aktif';assert.match(revokeDemoAdmin(again,id).activity[0].action,/Mencabut akses/);
+});
+
+test('article categories restore legacy data and persist edits',()=>{
+ const state=initialAdmin();delete state.blogs[0].category;
+ const restored=adminSchema.parse(state);assert.equal(restored.blogs[0].category,'Edukasi');
+ const next=saveAdminRecord(restored,'blogs',{...restored.blogs[0],category:'Kampus'});
+ assert.equal(adminSchema.parse(JSON.parse(JSON.stringify(next))).blogs[0].category,'Kampus');
+ assert.throws(()=>saveAdminRecord(restored,'blogs',{...restored.blogs[0],category:'Tidak valid'}));
+});
+
+test('blog editor restores metadata and validates scheduled publication',()=>{
+ const state=initialAdmin(); const old={...state.blogs[0]};delete old.author;delete old.coverId;delete old.coverAlt;
+ const restored=adminSchema.parse({...state,blogs:[old]});assert.equal(restored.blogs[0].author,'Tim Gleans');
+ assert.throws(()=>saveAdminRecord(state,'blogs',{...state.blogs[0],status:'Terjadwal'}),/mendatang/);
+ assert.throws(()=>saveAdminRecord(state,'blogs',{...state.blogs[0],status:'Terjadwal',publishAt:'2020-01-01T00:00:00.000Z'}),/mendatang/);
+ const publishAt=new Date(Date.now()+86400000).toISOString();
+ const next=saveAdminRecord(state,'blogs',{...state.blogs[0],status:'Terjadwal',publishAt,author:'Penulis Demo',coverId:'cover-demo',coverAlt:'Cover artikel'});
+ const record=adminSchema.parse(JSON.parse(JSON.stringify(next))).blogs[0];
+ assert.equal(record.publishAt,publishAt);assert.equal(record.author,'Penulis Demo');assert.equal(record.coverId,'cover-demo');assert.equal(record.status,'Terjadwal');
 });
