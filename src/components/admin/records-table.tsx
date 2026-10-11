@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowUpRight, Eye, Search } from "lucide-react";
+import { ArrowUpRight, Check, Eye, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatRupiah } from "@/lib/format";
@@ -93,7 +93,7 @@ export function AdminRecordsTable({ module }: { module: "pesanan" | "pelanggan" 
   ];
 
   return <>
-    <div className="mb-7"><h1 className="text-2xl font-semibold sm:text-3xl">{title}</h1><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{isOrder ? "Pantau pembayaran, pemeriksaan, dan pengiriman laporan. Buka detail untuk melihat informasi pesanan." : "Lihat profil, saldo, kuota, dan riwayat pesanan pelanggan."}</p></div>
+    <div className="mb-7"><h1 className="text-2xl font-semibold sm:text-3xl">{title}</h1><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{isOrder ? "Pantau pembayaran, pemeriksaan, dan pengiriman laporan." : "Lihat profil, saldo, kuota, dan riwayat pesanan pelanggan."}</p></div>
     <div className="mb-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{metrics.map(([label, value]) => <section key={label} className={card}><p className="text-xs text-muted-foreground">{label}</p><p className="mt-4 break-words text-2xl font-semibold">{value}</p></section>)}</div>
     <div className="min-w-0 w-full">
       <div className="mb-5 grid gap-3">
@@ -140,11 +140,35 @@ function OrderDetail({ order, customer, now }: { order: Order; customer?: Custom
   return <div className="space-y-6">
     <section className="rounded-2xl bg-surface p-4"><p className="text-xs text-muted-foreground">{order.id} · {date(order.date)}</p><h3 className="mt-2 break-words font-semibold">{order.document}</h3><p className="mt-3 text-xl font-semibold">{formatRupiah(order.amount)}</p></section>
     <dl className="grid gap-5 sm:grid-cols-2"><DetailItem label="Pelanggan">{customer?.name || order.customerId}</DetailItem><DetailItem label="ID pelanggan">{order.customerId}</DetailItem><DetailItem label="Email">{customer?.email || "—"}</DetailItem><DetailItem label="WhatsApp">{customer?.whatsapp || "—"}</DetailItem></dl>
-    <dl className="grid gap-5 rounded-2xl border p-4 sm:grid-cols-3"><DetailItem label="Pembayaran"><Status value={order.payment}/></DetailItem><DetailItem label="Pemeriksaan"><Status value={order.processing}/></DetailItem><DetailItem label="Pengiriman laporan"><Status value={order.delivery}/></DetailItem></dl>
+    <OrderProgress order={order}/>
     {order.processing === "Selesai" && <section className="rounded-2xl bg-surface p-4"><h3 className="text-sm font-medium">Akses dokumen dan laporan</h3><Retention order={order} now={now} detail/></section>}
     {order.failureReason && <section className="rounded-2xl bg-amber-50 p-4"><h3 className="text-sm font-medium">{order.failureReason === "rate_limit" ? "Menunggu layanan tersedia" : "Penyebab kegagalan"}</h3><p className="mt-2 text-sm">{failureLabels[order.failureReason]}</p></section>}
     <dl><DetailItem label="Catatan operator"><span className="whitespace-pre-wrap">{order.note || "Belum ada catatan."}</span></DetailItem></dl>
   </div>;
+}
+
+function OrderProgress({ order }: { order: Order }) {
+  const steps = [
+    { label: "Pembayaran", value: order.payment, complete: order.payment === "Berhasil" },
+    { label: "Pemeriksaan", value: order.processing, complete: order.processing === "Selesai" },
+    { label: "Pengiriman laporan", value: order.delivery, complete: order.delivery === "Terkirim" },
+  ];
+  const current = steps.findIndex(step => !step.complete);
+  return <ol aria-label="Progress pesanan" className="grid grid-cols-3 py-4">
+    {steps.map((step, index) => {
+      const failed = ["Gagal", "Gagal dikirim", "Kedaluwarsa", "Refund"].includes(step.value);
+      const active = index === current && !failed;
+      const color = failed ? "border-red-600 bg-red-50 text-red-600" : step.complete ? "border-emerald-600 bg-emerald-600 text-white" : active ? "border-primary bg-white text-primary" : "border-border bg-white text-muted-foreground";
+      return <li key={step.label} aria-current={active ? "step" : undefined} className="relative min-w-0 text-center">
+        {index < steps.length - 1 && <span aria-hidden="true" className={`absolute left-1/2 top-[14px] h-1 w-full ${step.complete && steps[index + 1].complete ? "bg-emerald-600" : "bg-border"}`}/>}
+        <span aria-hidden="true" className={`relative mx-auto flex size-8 items-center justify-center rounded-full border-[3px] ${color}`}>
+          {failed ? <X className="size-5"/> : step.complete ? <Check className="size-5" strokeWidth={3}/> : active ? <span className="size-3 rounded-full bg-primary"/> : null}
+        </span>
+        <p className="mt-3 px-1 text-xs font-medium sm:text-sm">{step.label}</p>
+        <p className={`mt-1 px-1 text-xs ${failed ? "text-red-600" : step.complete ? "text-emerald-700" : active ? "text-primary" : "text-muted-foreground"}`}>{step.value}</p>
+      </li>;
+    })}
+  </ol>;
 }
 
 function CustomerDetail({ customer, orders }: { customer: Customer; orders: Order[] }) {
