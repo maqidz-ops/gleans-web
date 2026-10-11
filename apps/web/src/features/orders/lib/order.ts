@@ -4,7 +4,6 @@ import { z } from "zod";
 import { countWords, formatBytes, formatNumber } from "@/lib/format";
 
 export const MAX_FILE_BYTES = 25 * 1024 * 1024;
-export const MIN_WORDS = 250;
 export const MAX_WORDS = 25_000;
 export { SHIELD_PRICE as PRICE_PER_DOCUMENT } from "@/lib/plans";
 
@@ -17,7 +16,7 @@ export const ACCEPTED_FILES = {
 
 const EXTENSIONS = ["pdf", "doc", "docx", "txt"];
 
-export const LIMIT_LABEL = `Maksimal file ${MAX_FILE_BYTES / 1024 / 1024}MB • ${formatNumber(MIN_WORDS)} - ${formatNumber(MAX_WORDS)} kata`;
+export const LIMIT_LABEL = `Maksimal file ${MAX_FILE_BYTES / 1024 / 1024}MB • ${formatNumber(MAX_WORDS)} kata`;
 
 export const whatsappSchema = z
   .string()
@@ -53,7 +52,6 @@ export function validateFile(file: File): string | null {
 }
 
 export function validateWords(words: number): string | null {
-  if (words < MIN_WORDS) return `Dokumen minimal ${formatNumber(MIN_WORDS)} kata, dokumenmu ${formatNumber(words)} kata.`;
   if (words > MAX_WORDS) return `Dokumen maksimal ${formatNumber(MAX_WORDS)} kata, dokumenmu ${formatNumber(words)} kata.`;
   return null;
 }
