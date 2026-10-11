@@ -12,7 +12,7 @@ Environment lokal berada di `apps/web/.env.local`; contoh variabel berada di `.e
 
 ## Hosting dan checks
 
-Root directory aplikasi pada hosting: `apps/web`; install workspace dari root repository, build dengan `pnpm --filter @gleans/web build`. Pertahankan variabel environment dan redirect auth yang ada. Blog dibaca dari `apps/web/content/blog`. Worker DOC dibangun ke `apps/web/public/workers` sebelum dev/build.
+Root directory aplikasi pada hosting: `apps/web`; install workspace dari root repository, build dengan `pnpm --filter @gleans/web build`. Pada Vercel, set Root Directory ke `apps/web`; perintah install/build otomatis dapat memakai package aplikasi. pnpm 11 memakai aturan `allowBuilds` eksplisit: `unrs-resolver` diizinkan menyiapkan binary native, sedangkan skrip pemberitahuan `core-js` dinonaktifkan. Verifikasi instalasi tanpa `--ignore-scripts` agar sama dengan CI. Pertahankan variabel environment dan redirect auth yang ada. Blog dibaca dari `apps/web/content/blog`. Worker DOC dibangun ke `apps/web/public/workers` sebelum dev/build.
 
 Jalankan `pnpm typecheck`, `pnpm lint`, dan `pnpm test` dari root. Tes aplikasi berada di `apps/web/scripts` dan fixture di `apps/web/tests`; skrip citation/file membaca sumber paket workspace.
 
