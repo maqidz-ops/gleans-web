@@ -6,7 +6,9 @@ settings:
 
 importers:
 
-  .:
+  .: {}
+
+  apps/web:
     dependencies:
       '@citation-js/core':
         specifier: ^0.9.0
@@ -14,6 +16,21 @@ importers:
       '@citation-js/plugin-csl':
         specifier: ^0.9.0
         version: 0.9.0(@citation-js/core@0.9.0)
+      '@gleans/citation':
+        specifier: workspace:*
+        version: link:../../packages/citation
+      '@gleans/file-tools':
+        specifier: workspace:*
+        version: link:../../packages/file-tools
+      '@gleans/insforge':
+        specifier: workspace:*
+        version: link:../../packages/insforge
+      '@gleans/schemas':
+        specifier: workspace:*
+        version: link:../../packages/schemas
+      '@gleans/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       '@hookform/resolvers':
         specifier: ^5.9.1
         version: 5.9.1(ajv-formats@2.1.1(ajv@8.20.0))(ajv@8.20.0)(react-hook-form@7.89.0(@types/react@19.3.0)(react@19.1.0))(zod@4.6.5)
@@ -147,6 +164,124 @@ importers:
       word-extractor:
         specifier: 1.0.4
         version: 1.0.4
+
+  packages/citation:
+    dependencies:
+      '@citation-js/core':
+        specifier: ^0.9.0
+        version: 0.9.0
+      '@citation-js/plugin-csl':
+        specifier: ^0.9.0
+        version: 0.9.0(@citation-js/core@0.9.0)
+      jszip:
+        specifier: ^3.10.2
+        version: 3.10.2
+    devDependencies:
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+
+  packages/file-tools:
+    dependencies:
+      '@pdf-lib/fontkit':
+        specifier: ^1.1.1
+        version: 1.1.1
+      core-js:
+        specifier: ^3.50.0
+        version: 3.50.0
+      jszip:
+        specifier: ^3.10.2
+        version: 3.10.2
+      mammoth:
+        specifier: ^1.13.0
+        version: 1.13.0
+      pdf-lib:
+        specifier: ^1.17.1
+        version: 1.17.1
+      pdfjs-dist:
+        specifier: ^6.3.289
+        version: 6.3.289
+    devDependencies:
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+
+  packages/insforge:
+    dependencies:
+      '@insforge/sdk':
+        specifier: ^1.5.2
+        version: 1.5.2(supports-color@7.2.0)
+      next:
+        specifier: ^15.5.26
+        version: 15.5.26(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@20.19.43)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      react:
+        specifier: ^19.1.0
+        version: 19.1.0
+      server-only:
+        specifier: ^0.0.1
+        version: 0.0.1
+    devDependencies:
+      '@types/node':
+        specifier: ^20
+        version: 20.19.43
+      '@types/react':
+        specifier: ^19
+        version: 19.3.0
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+
+  packages/schemas:
+    dependencies:
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
+    devDependencies:
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+
+  packages/typescript-config: {}
+
+  packages/ui:
+    dependencies:
+      class-variance-authority:
+        specifier: ^0.7.1
+        version: 0.7.1
+      cn:
+        specifier: ^0.4.0
+        version: 0.4.0
+      embla-carousel-react:
+        specifier: ^8.6.0
+        version: 8.6.0(react@19.1.0)
+      lucide-react:
+        specifier: ^1.49.0
+        version: 1.49.0(@types/react@19.3.0)(react@19.1.0)
+      next-themes:
+        specifier: ^0.4.6
+        version: 0.4.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      radix-ui:
+        specifier: ^1.6.7
+        version: 1.6.7(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      react:
+        specifier: ^19.1.0
+        version: 19.1.0
+      react-dom:
+        specifier: ^19.1.0
+        version: 19.1.0(react@19.1.0)
+      sonner:
+        specifier: ^2.0.8
+        version: 2.0.8(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+    devDependencies:
+      '@types/node':
+        specifier: ^20
+        version: 20.19.43
+      '@types/react':
+        specifier: ^19
+        version: 19.3.0
+      typescript:
+        specifier: ^5
+        version: 5.9.3
 
 packages:
 
@@ -4669,6 +4804,9 @@ packages:
   serve-static@2.2.1:
     resolution: {integrity: sha512-xRXBn0pPqQTVQiC8wyQrKs2MOlX24zQ0POGaj0kultvoOCstBQM5yvOhAVSUwOMjQtTvsPWoNCHfPGwaaQJhTw==}
     engines: {node: '>= 18'}
+
+  server-only@0.0.1:
+    resolution: {integrity: sha512-qepMx2JxAa5jjfzxG79yPPq+8BuFToHd1hm7kI+Z4zAq1ftQiP7HcxMhDDItrbtwVeLg/cY2JnKnrcFkmiswNA==}
 
   set-cookie-parser@3.1.2:
     resolution: {integrity: sha512-5/r/lTwbJ3zQ+qwdUFZYeRNqda7P5HD8zQKqlSjdGt1/S0cjLAphHusj4Y58ahDtWn/g32xrIS58/ikOvwl0Lw==}
@@ -10547,6 +10685,8 @@ snapshots:
       send: 1.2.1(supports-color@7.2.0)
     transitivePeerDependencies:
       - supports-color
+
+  server-only@0.0.1: {}
 
   set-cookie-parser@3.1.2: {}
 

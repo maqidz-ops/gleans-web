@@ -1,0 +1,26 @@
+{
+  "name": "@gleans/insforge",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./server": "./src/server.ts",
+    "./browser": "./src/browser.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@insforge/sdk": "^1.5.2",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "@types/react": "^19",
+    "@types/node": "^20"
+  },
+  "peerDependencies": {
+    "next": "^15.5.26",
+    "react": "^19.1.0"
+  }
+}
