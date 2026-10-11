@@ -99,3 +99,28 @@ test('remember preference survives login and both refresh paths', async () => {
     assert.equal(isPersistentSession(undefined), true);
   } finally { globalThis.fetch = originalFetch; }
 });
+
+test('admin access requires both provisioned ID and email; profile roles cannot grant it', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const { default: ts } = await import('typescript');
+  const source = await readFile('src/features/auth/access.ts', 'utf8');
+  const js = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
+  const { matchesAdmin, landingPage } = await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
+  const configured = { id: 'admin-id', email: 'admin@example.invalid' };
+  const admin = { id: configured.id, email: 'ADMIN@example.invalid' };
+  assert.equal(matchesAdmin(admin, configured), true);
+  assert.equal(landingPage(admin, configured), '/admin');
+  for (const user of [
+    { id: 'regular-user', email: configured.email, profile: { role: 'admin', isAdmin: true } },
+    { id: configured.id, email: 'different@example.invalid' },
+    { id: 'regular-user', email: 'user@example.invalid' },
+  ]) {
+    assert.equal(matchesAdmin(user, configured), false);
+    assert.equal(landingPage(user, configured), '/dashboard');
+  }
+  assert.equal(matchesAdmin(null, configured), false);
+  assert.equal(matchesAdmin(admin, {}), false);
+  assert.equal(matchesAdmin(admin, { id: configured.id }), false);
+  assert.equal(matchesAdmin(admin, { email: configured.email }), false);
+  assert.equal(landingPage(admin, {}), '/dashboard');
+});

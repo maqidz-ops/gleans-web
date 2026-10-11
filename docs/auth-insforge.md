@@ -25,7 +25,7 @@ Konfigurasi backend telah diterapkan melalui `insforge.toml`: verifikasi email w
 ## Perilaku
 
 - `/masuk`, `/daftar`, `/lupa-kata-sandi`, `/verifikasi-email`, `/reset-kata-sandi` tersedia untuk pengunjung.
-- `/dashboard` beserta subhalamannya memvalidasi pengguna di server dan mengarahkan tamu ke `/masuk`. `/akun` meneruskan ke dashboard.
+- `/dashboard` beserta subhalamannya memvalidasi pengguna di server dan mengarahkan tamu ke `/masuk`. `/akun` meneruskan ke dashboard sesuai identitas akun.
 - Semua fitur publik tetap tersedia tanpa login.
 - Mutasi auth menggunakan Server Actions, bukan SDK browser. SDK SSR mengelola cookie access token dan refresh token `httpOnly`.
 - Middleware memperbarui sesi sebelum Server Components membaca cookie. `/api/auth/refresh` menangani refresh browser.
@@ -47,4 +47,6 @@ Pengiriman dan keberhasilan tautan email end-to-end harus dikonfirmasi dengan in
 
 ## Integrasi dashboard pengguna
 
-Identitas sidebar berasal dari InsForge, profil nama dan WhatsApp disimpan melalui server action, dan logout mencabut sesi serta menghapus cookie. Pesanan, saldo, kuota, dan pembayaran masih data demo lokal yang dipisahkan berdasarkan ID akun. Perubahan ini tidak menambahkan integrasi dashboard admin.
+Identitas sidebar berasal dari InsForge, profil nama dan WhatsApp disimpan melalui server action, dan logout mencabut sesi serta menghapus cookie. Pesanan, saldo, kuota, dan pembayaran masih data demo lokal yang dipisahkan berdasarkan ID akun. Dashboard admin memakai sesi yang sama, tetapi aksesnya hanya diberikan jika ID dan email cocok dengan `GLEANS_ADMIN_USER_ID` dan `GLEANS_ADMIN_EMAIL` di server. Role dari profil atau data demo tidak memberikan akses admin.
+
+Login akun admin yang telah diprovisikan mengarah ke `/admin`; akun biasa ke `/dashboard`. Akun biasa yang membuka `/admin` dikembalikan ke dashboard pengguna. Logout admin mengakhiri sesi yang sama beserta preferensi “Ingat saya”. Pesanan, konten, dan pengaturan admin masih demo lokal.

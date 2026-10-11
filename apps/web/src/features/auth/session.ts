@@ -1,14 +1,21 @@
 import "server-only";
-import { serverClient } from "@gleans/insforge/server";
-
-export function adminAuthConfigured() {
-  return Boolean(process.env.NEXT_PUBLIC_INSFORGE_URL && process.env.NEXT_PUBLIC_INSFORGE_ANON_KEY && process.env.GLEANS_ADMIN_USER_ID);
+import { currentUser, isAuthConfigured } from "./server";
+import { matchesAdmin, landingPage } from "./access";
+export function adminIdentity() {
+  return { id: process.env.GLEANS_ADMIN_USER_ID, email: process.env.GLEANS_ADMIN_EMAIL };
 }
-
+export function adminAuthConfigured() {
+  const identity = adminIdentity();
+  return Boolean(isAuthConfigured() && identity.id && identity.email);
+}
+export function isAdmin(user: { id: string; email: string } | null | undefined) {
+  return matchesAdmin(user, adminIdentity());
+}
+export function accountLandingPage(user: { id: string; email: string }) {
+  return landingPage(user, adminIdentity());
+}
 export async function currentAdmin() {
   if (!adminAuthConfigured()) return null;
-  const client = await serverClient();
-  const { data, error } = await client.auth.getCurrentUser();
-  if (error || !data?.user || data.user.id !== process.env.GLEANS_ADMIN_USER_ID || data.user.email.toLowerCase() !== process.env.GLEANS_ADMIN_EMAIL?.toLowerCase()) return null;
-  return data.user;
+  const user = await currentUser();
+  return isAdmin(user) ? user : null;
 }

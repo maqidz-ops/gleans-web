@@ -6,6 +6,7 @@ import { z } from "zod";
 import { SESSION_PREFERENCE_COOKIE, sessionPreferenceOptions } from "./session-preference";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { accountLandingPage } from "./session";
 import { authActions, serverClient, appUrl, isAuthConfigured } from "@/features/auth/server";
 import { loginSchema, registerSchema, forgotPasswordSchema, resetPasswordSchema } from "@gleans/schemas/auth";
 
@@ -19,16 +20,18 @@ export async function login(values: unknown): Promise<ActionResult> {
   const parsed = loginSchema.safeParse(values);
   if (!parsed.success) return { error: "Periksa kembali email dan kata sandi." };
   if (!isAuthConfigured()) return unavailable;
+  let destination = "/dashboard";
   try {
     const remember = parsed.data.remember ?? false;
     const auth = await authActions(remember);
     const { data, error } = await auth.signInWithPassword({ email: parsed.data.email, password: parsed.data.password });
     if (!error && !data?.user) return { error: "Login gagal. Silakan coba lagi." };
     if (error) return { error: message(error, error.statusCode === 403 ? "Email belum diverifikasi. Buka tautan verifikasi di email Anda." : "Email atau kata sandi salah.") };
+    if (data?.user) destination = accountLandingPage(data.user);
     (await cookies()).set(SESSION_PREFERENCE_COOKIE, remember ? "persistent" : "session", sessionPreferenceOptions(remember));
   } catch { return { error: "Tidak dapat terhubung. Silakan coba lagi." }; }
   revalidatePath("/", "layout");
-  redirect("/dashboard");
+  redirect(destination);
 }
 export async function signup(values: unknown): Promise<ActionResult> {
   const parsed = registerSchema.safeParse(values);

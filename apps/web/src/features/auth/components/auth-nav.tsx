@@ -24,5 +24,5 @@ export function AuthNav({ onNavigate }: { onNavigate?: () => void }) {
     return () => { active = false; window.removeEventListener("focus", refresh); };
   }, [pathname]);
   if (signedIn === null) return <span role="status" aria-label="Memuat akun" className="h-10 w-24 animate-pulse rounded-full bg-muted" />;
-  return signedIn ? <><Button asChild size="pill-sm" variant="outline"><Link href="/dashboard" onClick={onNavigate}>Akun Saya</Link></Button><form action={logout}><Button type="submit" size="pill-sm" onClick={onNavigate}>Keluar</Button></form></> : <><Button asChild size="pill-sm" variant="outline"><Link href="/masuk" onClick={onNavigate}>Masuk</Link></Button><Button asChild size="pill-sm"><Link href="/daftar" onClick={onNavigate}>Daftar</Link></Button></>;
+  return signedIn ? <><Button asChild size="pill-sm" variant="outline"><Link href="/akun" onClick={onNavigate}>Akun Saya</Link></Button><form action={logout}><Button type="submit" size="pill-sm" onClick={onNavigate}>Keluar</Button></form></> : <><Button asChild size="pill-sm" variant="outline"><Link href="/masuk" onClick={onNavigate}>Masuk</Link></Button><Button asChild size="pill-sm"><Link href="/daftar" onClick={onNavigate}>Daftar</Link></Button></>;
 }
