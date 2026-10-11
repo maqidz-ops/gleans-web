@@ -1,5 +1,5 @@
 [auth]
-allowed_redirect_urls = ["http://localhost:3000/verifikasi-email", "http://localhost:3000/reset-kata-sandi", "https://gleans.my.id/verifikasi-email", "https://gleans.my.id/reset-kata-sandi"]
+allowed_redirect_urls = ["http://localhost:3000/verifikasi-email", "http://localhost:3000/reset-kata-sandi", "https://gleans.my.id/verifikasi-email", "https://gleans.my.id/reset-kata-sandi", "http://localhost:3103/masuk", "https://gleans.my.id/masuk"]
 require_email_verification = true
 verify_email_method = "link"
 reset_password_method = "link"
