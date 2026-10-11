@@ -3,6 +3,27 @@ import assert from 'node:assert/strict';
 import { createAuthActions, createServerClient, createRefreshAuthRouter } from '@insforge/sdk/ssr';
 import { updateSession } from '@insforge/sdk/ssr/middleware';
 
+test('signup and reset enforce backend password policy without rejecting existing login passwords', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const { createRequire } = await import('node:module');
+  const { pathToFileURL } = await import('node:url');
+  const { default: ts } = await import('typescript');
+  const zodUrl = pathToFileURL(createRequire(import.meta.url).resolve('zod')).href;
+  const source = (await readFile('../../packages/schemas/src/auth.ts', 'utf8')).replace('"zod"', JSON.stringify(zodUrl));
+  const js = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
+  const { registerSchema, loginSchema, resetPasswordSchema } = await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
+  const account = { name: 'Test User', email: 'test@example.invalid' };
+  for (const password of ['Aa1!abc', 'abcdefgh1!', 'ABCDEFGH1!', 'Abcdefgh!', 'Abcdefgh1', 'Abcdefgh1 ']) {
+    assert.equal(registerSchema.safeParse({ ...account, password }).success, false);
+    assert.equal(resetPasswordSchema.safeParse({ password, confirmPassword: password }).success, false);
+  }
+  const password = 'StrongPass1!';
+  assert.equal(registerSchema.safeParse({ ...account, password }).success, true);
+  assert.equal(resetPasswordSchema.safeParse({ password, confirmPassword: password }).success, true);
+  assert.equal(resetPasswordSchema.safeParse({ password, confirmPassword: 'Different1!' }).success, false);
+  assert.equal(loginSchema.safeParse({ email: account.email, password: 'legacy-password', remember: false }).success, true);
+});
+
 const user = { id: 'test-user', email: 'test@example.invalid', emailVerified: true };
 const jwt = (expires) => `eyJhbGciOiJIUzI1NiJ9.${Buffer.from(JSON.stringify({ sub: user.id, exp: expires })).toString('base64url')}.signature`;
 const accessToken = jwt(Math.floor(Date.now() / 1000) + 3600);

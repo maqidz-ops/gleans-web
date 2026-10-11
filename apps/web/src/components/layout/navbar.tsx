@@ -173,20 +173,9 @@ export function Navbar() {
               </Link>
             ))}
           </nav>
-          {(
           <div className="mt-6 flex gap-3 px-5 pb-6">
-            <Button asChild size="pill" variant="outline" className="flex-1 font-normal">
-              <Link href="/masuk" onClick={() => setOpen(false)}>
-                Masuk
-              </Link>
-            </Button>
-            <Button asChild size="pill" className="flex-1 font-normal">
-              <Link href="/daftar" onClick={() => setOpen(false)}>
-                Daftar
-              </Link>
-            </Button>
+            <AuthNav onNavigate={() => setOpen(false)} />
           </div>
-          )}
         </div>
       )}
 

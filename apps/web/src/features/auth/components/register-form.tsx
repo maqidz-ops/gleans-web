@@ -10,7 +10,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { AuthCard, AuthField, AuthInput, PasswordInput } from "@/features/auth/components/auth-card";
 import { Button } from "@gleans/ui/button";
-import { registerSchema, type RegisterValues } from "@gleans/schemas/auth";
+import { passwordRequirements, registerSchema, type RegisterValues } from "@gleans/schemas/auth";
 
 export function RegisterForm() {
   const [serverError, setServerError] = useState<string>();
@@ -62,14 +62,17 @@ export function RegisterForm() {
             />
           </AuthField>
         </div>
-        <AuthField label="Kata Sandi" htmlFor="password" error={errors.password?.message}>
+        <AuthField label="Kata Sandi" htmlFor="password">
           <PasswordInput
             id="password"
             icon="/images/icon-lock.png"
             autoComplete="new-password"
             placeholder="Masukkan Kata Sandi"
+            aria-invalid={Boolean(errors.password)}
+            aria-describedby={errors.password ? "password-requirements" : undefined}
             {...register("password")}
           />
+          {errors.password && <p id="password-requirements" role="alert" className="text-sm text-destructive">{passwordRequirements}</p>}
         </AuthField>
         {serverError && <p role="alert" className="text-destructive text-sm">{serverError}</p>}
         <Button type="submit" size="pill" disabled={isSubmitting} className="w-full font-normal">

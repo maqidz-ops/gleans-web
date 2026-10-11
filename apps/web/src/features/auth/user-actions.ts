@@ -35,7 +35,7 @@ export async function login(values: unknown): Promise<ActionResult> {
 }
 export async function signup(values: unknown): Promise<ActionResult> {
   const parsed = registerSchema.safeParse(values);
-  if (!parsed.success) return { error: "Periksa kembali nama, email, dan kata sandi." };
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Periksa kembali nama, email, dan kata sandi." };
   if (!isAuthConfigured()) return unavailable;
   try {
     const auth = await authActions();

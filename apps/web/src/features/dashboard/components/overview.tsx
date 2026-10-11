@@ -19,7 +19,7 @@ export function DashboardOverview() {
   return <><section aria-label="Sapaan pengguna" className="relative mb-7 flex items-center justify-between gap-4 overflow-hidden rounded-[24px] bg-[#101D42] p-6 text-white sm:gap-8 sm:px-8 sm:py-6">
     <div className="relative z-10 min-w-0 flex-1">
       <h1 className="break-words text-2xl font-semibold tracking-tight sm:text-3xl">{greeting}</h1>
-      <p className="mt-2 text-sm leading-relaxed text-white/75">Lanjutkan langkah kecil untuk tulisan yang lebih baik.</p>
+      <p className="mt-2 text-sm leading-relaxed text-white/75">Siap menyelesaikan tulisanmu? Mulai bersama Gleans.</p>
       <Button asChild size="pill-sm" className="mt-5">
         <Link href="/dashboard/pesanan?baru=1"><Plus />Pesanan demo</Link>
       </Button>
