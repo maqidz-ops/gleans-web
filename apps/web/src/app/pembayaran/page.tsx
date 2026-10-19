@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Navbar } from "@/components/layout/navbar";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
@@ -10,7 +11,7 @@ export default function PaymentPage() {
     <Navbar />
     <Breadcrumb items={[{ label: "Gleans Shield", href: "/deteksi-ai" }, { label: "Pembayaran" }]} />
     <main className="flex flex-1 items-start justify-center px-4 py-10 sm:py-12">
-      <PaymentCheckout />
+      <Suspense fallback={<p>Memuat pembayaran…</p>}><PaymentCheckout /></Suspense>
     </main>
   </div>;
 }
