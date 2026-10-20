@@ -1,4 +1,5 @@
 "use client";
+import { ShieldOrders } from "./shield-orders";
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Search, Pencil, Copy, ArrowUpRight } from "lucide-react";
@@ -27,7 +28,7 @@ function today(){return new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Jakarta"
 function blank(collection:Collection):RecordData{const id=`DEMO-${crypto.randomUUID().slice(0,8)}`;switch(collection){case"customers":return{id,name:"",email:"",whatsapp:"",balance:0,quota:0};case"orders":return{id,customerId:"USR-001",document:"",amount:10000,payment:"Menunggu",processing:"Belum diproses",delivery:"Belum dikirim",note:"",date:today()};case"plans":return{id,name:"",price:45000,quota:5,active:true};case"blogs":return{id,title:"",slug:"",category:"Edukasi",summary:"",content:"",status:"Draft",author:"Tim Gleans",coverId:"",coverAlt:"",featured:false};case"promos":return{id,name:"",title:"",type:"Banner",code:"",discount:0,start:today(),end:today(),active:false};}}
 function Heading({title,description}:{title:string;description:string}){return <div className="mb-7"><h1 className="text-2xl font-semibold sm:text-3xl">{title}</h1><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p></div>;}
 function message(error:unknown){return error instanceof z.ZodError?error.issues.map(x=>`${x.path.join(".")}: ${x.message}`).join(" · "):error instanceof Error?error.message:"Periksa data yang dimasukkan.";}
-export function AdminModule({module}:{module:Module}){return module==="pengaturan"?<AdminSettings/>:module==="pesanan"||module==="pelanggan"?<AdminRecordsTable key={module} module={module}/>:<Records key={module} module={module}/>;}
+export function AdminModule({module}:{module:Module}){return module==="pengaturan"?<AdminSettings/>:module==="pesanan"||module==="pelanggan"?<>{module==="pesanan" && <ShieldOrders/>}<AdminRecordsTable key={module} module={module}/></>:<Records key={module} module={module}/>;}
 function Records({module}:{module:Exclude<Module,"pengaturan">}) {
  const openedDetail=useRef<string|null>(null);
  const {state,save}=useAdmin();const params=useSearchParams();const router=useRouter();const def=definitions[module];const [query,setQuery]=useState("");const [filter,setFilter]=useState(params.get("status")==="gagal"?"Gagal":params.get("status")==="proses"?"Diproses":"Semua");const [edit,setEdit]=useState<RecordData|null>(null);const [preview,setPreview]=useState<RecordData|null>(null);const [reason,setReason]=useState("");const [error,setError]=useState("");const [txFilter,setTxFilter]=useState("Semua");

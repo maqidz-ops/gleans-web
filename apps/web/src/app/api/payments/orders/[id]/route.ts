@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { orderAccess } from "@/features/payments/server/guest";
+import { allowOrderLookup } from "@/features/payments/server/lookup-limit";
 import { dashboardUser } from "@/features/auth/server";
 import { createInvoice, paymentMethods, callbackOrigin, InvoiceRejected, selectQrisMethod } from "@/features/payments/server/duitku";
 import { findOrder, paymentAdmin, publicOrder } from "@/features/payments/server/repository";
@@ -6,20 +8,20 @@ import { reconcilePayment } from "@/features/payments/server/service";
 import { json, paymentError, sameOrigin } from "@/features/payments/server/http";
 export const runtime = "nodejs";
 type Context = { params: Promise<{ id: string }> };
-export async function GET(_request: Request, context: Context) {
+export async function GET(request: Request, context: Context) {
   try {
-    const user = await dashboardUser();
-    if (!user) return json({ error: "Silakan masuk terlebih dahulu." }, 401);
-    const order = await findOrder((await context.params).id, user.id);
-    return order ? json({ order: publicOrder(order) }) : json({ error: "Pesanan tidak ditemukan." }, 404);
+    if (!await allowOrderLookup(request, "checkout")) return json({ error: "Terlalu banyak permintaan. Coba kembali dalam satu menit." }, 429);
+    const order = await findOrder((await context.params).id);
+    if (!order) return json({ error: "Pesanan tidak ditemukan." }, 404);
+    const access = await orderAccess(order, (await dashboardUser())?.id);
+    return json({ order: { ...publicOrder(order), has_access: access.allowed, can_download: access.allowed && order.status === "paid" && order.fulfillment_status === "completed" && Date.parse(order.report_expires_at ?? "") > Date.now(), access_code: access.code } });
   } catch (error) { return paymentError(error); }
 }
 export async function POST(request: Request, context: Context) {
   if (!sameOrigin(request)) return json({ error: "Permintaan tidak diizinkan." }, 403);
   try {
-    const user = await dashboardUser();
-    if (!user) return json({ error: "Silakan masuk terlebih dahulu." }, 401);
-    const order = await findOrder((await context.params).id, user.id);
+    if (!await allowOrderLookup(request, "checkout")) return json({ error: "Terlalu banyak permintaan. Coba kembali dalam satu menit." }, 429);
+    const order = await findOrder((await context.params).id);
     if (!order) return json({ error: "Pesanan tidak ditemukan." }, 404);
     const raw = await request.text();
     if (raw.length > 1024) return json({ error: "Data terlalu besar." }, 413);
@@ -53,7 +55,7 @@ export async function POST(request: Request, context: Context) {
         throw error;
       }
     }
-    const result = await findOrder(order.id, user.id);
+    const result = await findOrder(order.id);
     return json({ order: result && publicOrder(result) });
   } catch (error) { if (error instanceof SyntaxError) return json({ error: "Data tidak valid." }, 400); return paymentError(error); }
 }

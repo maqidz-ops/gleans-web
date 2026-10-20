@@ -11,5 +11,11 @@ export type PaymentOrder = {
   created_at: string;
   expires_at: string | null;
   paid_at: string | null;
+  fulfillment_status: "pending" | "processing" | "completed" | "failed";
+  completed_at: string | null;
+  report_expires_at: string | null;
+  can_download?: boolean;
+  has_access?: boolean;
+  access_code?: string | null;
 };
 export const PAYMENT_DOCUMENT_BUCKET = "shield-sandbox-documents";

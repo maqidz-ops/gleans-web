@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { createBrowserClient } from "@insforge/sdk/ssr";
-import { checkoutUserId } from "@/features/orders/lib/checkout-session";
-import { PAYMENT_DOCUMENT_BUCKET } from "@/features/payments/types";
+import { uploadPaymentFile } from "@/features/payments/upload-file";
 import { useDropzone } from "react-dropzone";
 import { Loader2, X } from "lucide-react";
 import { toast } from "sonner";
@@ -30,6 +28,7 @@ type Document = { file: File; words: number };
 
 export function OrderForm() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [whatsappError, setWhatsappError] = useState<string | null>(null);
   const [promoInput, setPromoInput] = useState("");
@@ -37,7 +36,13 @@ export function OrderForm() {
   const [document, setDocument] = useState<Document | null>(null);
   const [reading, setReading] = useState(false);
   const [paying, setPaying] = useState(false);
-  const submission = useRef<{ file: File; key: string; requestId: string } | null>(null);
+  const submission = useRef<{ file: File; ticket: string; requestId: string } | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/auth/session", { cache: "no-store" }).then(response => response.json()).then(body => { if (active && body.account?.email) setEmail(value => value || body.account.email); }).catch(() => {});
+    return () => { active = false; };
+  }, []);
 
   const subtotal = document ? PRICE_PER_DOCUMENT : 0;
   const discount = document ? (promo?.discount ?? 0) : 0;
@@ -104,21 +109,14 @@ export function OrderForm() {
     if (!parsed.success) { setWhatsappError(parsed.error.issues[0].message); return; }
     setWhatsappError(null);
     if (!document) { toast.error("Unggah dokumen yang mau diperiksa."); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) || email.trim().length > 50) { toast.error("Masukkan email yang valid untuk bukti pembayaran."); return; }
     setPaying(true);
     try {
-      const userId = await checkoutUserId();
-      if (!userId) { router.push("/masuk?next=%2Fdeteksi-ai"); return; }
-      const client = createBrowserClient({
-        baseUrl: process.env.NEXT_PUBLIC_INSFORGE_URL,
-        anonKey: process.env.NEXT_PUBLIC_INSFORGE_ANON_KEY,
-      });
       if (!submission.current || submission.current.file !== document.file) {
-        const key = `${userId}/${crypto.randomUUID()}.${document.file.name.split(".").pop()?.toLowerCase()}`;
-        const { error } = await client.storage.from(PAYMENT_DOCUMENT_BUCKET).upload(key, document.file);
-        if (error) throw new Error("Dokumen belum dapat disimpan. Silakan coba lagi.");
-        submission.current = { file: document.file, key, requestId: crypto.randomUUID() };
+        const ticket = await uploadPaymentFile(document.file);
+        submission.current = { file: document.file, ticket, requestId: crypto.randomUUID() };
       }
-      const response = await fetch("/api/payments/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ requestId: submission.current.requestId, documentName: document.file.name, documentKey: submission.current.key, words: document.words, whatsapp: parsed.data, ...(promo ? { promo: promo.code } : {}) }) });
+      const response = await fetch("/api/payments/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ requestId: submission.current.requestId, ticketId: submission.current.ticket, email: email.trim(), words: document.words, whatsapp: parsed.data, ...(promo ? { promo: promo.code } : {}) }) });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error);
       if (body.order.status === "draft") {
@@ -127,7 +125,7 @@ export function OrderForm() {
           if (!payment.ok) { const result = await payment.json(); toast.error(result.error || "QRIS belum dapat dibuat. Coba kembali pada halaman pembayaran."); }
         } catch { toast.error("QRIS belum dapat dikonfirmasi. Periksa pesanan pada halaman pembayaran."); }
       }
-      router.push(`/pembayaran?order=${encodeURIComponent(body.order.id)}`);
+      router.push(`/pembayaran?order=${encodeURIComponent(body.order.id)}${body.access_code ? `#access=${encodeURIComponent(body.access_code)}` : ""}`);
     } catch (error) { toast.error(error instanceof Error ? error.message : "Tidak dapat membuka pembayaran."); }
     finally { setPaying(false); }
   }
@@ -162,6 +160,7 @@ export function OrderForm() {
               value={whatsapp}
               onChange={(e) => {
                 setWhatsapp(e.target.value);
+                submission.current = null;
                 setWhatsappError(null);
               }}
               aria-invalid={whatsappError ? true : undefined}
@@ -169,6 +168,10 @@ export function OrderForm() {
               className="h-12 rounded-full pr-5 pl-13 md:text-base"
             />
           </div>
+        </Field>
+
+        <Field label="Email bukti pembayaran" htmlFor="checkout-email">
+          <Input id="checkout-email" type="email" autoComplete="email" maxLength={50} value={email} onChange={event => { setEmail(event.target.value); submission.current = null; }} placeholder="kamu@email.com" className="h-12 rounded-full px-5 md:text-base" />
         </Field>
 
         <Field label="Kode Promo" htmlFor="promo">
@@ -185,6 +188,7 @@ export function OrderForm() {
               value={promoInput}
               onChange={(e) => {
                 setPromoInput(e.target.value);
+                submission.current = null;
                 setPromo(null);
               }}
               placeholder="Masukkan Kode Promo"
@@ -234,7 +238,7 @@ export function OrderForm() {
 
       <section className="flex min-w-0 flex-col gap-6 rounded-[24px] border bg-white p-4">
         <h2 className="text-xl font-semibold">Ringkasan Pesanan</h2>
-        <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">Sandbox Duitku: simulasi pembayaran tanpa pemeriksaan dokumen atau pengiriman laporan. Masuk ke akun untuk melanjutkan.</p>
+        <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">Sandbox Duitku: simulasi pembayaran tanpa uang sungguhan. Kamu dapat memesan tanpa membuat akun.</p>
 
         <div className="flex-1">
           {document ? (
