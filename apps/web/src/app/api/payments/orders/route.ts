@@ -1,5 +1,5 @@
 import { uploadedFiles } from "@/features/payments/server/documents";
-import { randomUUID } from "node:crypto";
+import { reserveInvoice } from "@/features/payments/server/invoice";
 import { z } from "zod";
 import { dashboardUser, serverClient } from "@/features/auth/server";
 import { resolvePromo, whatsappSchema } from "@/features/orders/lib/pricing";
@@ -33,12 +33,12 @@ export async function POST(request: Request) {
     if (fileError || !file || file.size < 1 || file.size > 25 * 1024 * 1024) return json({ error: "Dokumen belum tersimpan. Silakan unggah kembali." }, 400);
     const promo = input.promo ? resolvePromo(input.promo, SHIELD_PRICE) : null;
     if (input.promo && !promo) return json({ error: "Kode promo tidak valid." }, 400);
-    const { data, error } = await admin.database.rpc("reserve_duitku_order", {
-      p_id: `GLS-${randomUUID()}`, p_owner: user.id, p_request: input.requestId,
+    const { data, error } = await reserveInvoice(id => admin.database.rpc("reserve_duitku_order", {
+      p_id: id, p_owner: user.id, p_request: input.requestId,
       p_email: user.email, p_name: user.name, p_whatsapp: input.whatsapp,
       p_document: input.documentName, p_key: file.key, p_url: file.url, p_bytes: file.size, p_words: input.words,
       p_amount: SHIELD_PRICE - (promo?.discount ?? 0), p_promo: promo?.code ?? null,
-    });
+    }));
     if (error) { if (error.message.includes("RATE_LIMIT")) return json({ error: "Terlalu banyak pesanan. Silakan lanjutkan pesanan yang sudah ada atau coba lagi nanti." }, 429); throw new Error("DATABASE_UNAVAILABLE"); }
     return json({ order: publicOrder(data) }, 201);
   } catch (error) { if (error instanceof SyntaxError) return json({ error: "Data tidak valid." }, 400); return paymentError(error); }

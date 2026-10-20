@@ -52,3 +52,7 @@ Public callback delivery from Duitku still requires deployment and must be retes
 
 - https://docs.duitku.com/api/id/
 - https://sandbox.duitku.com/payment/demo/demosuccesstransaction.aspx
+
+### Invoice numbers
+
+New reservations use `GLS-` followed by 12 cryptographically random uppercase hexadecimal characters (for example, `GLS-A7F29B83C1D4`). The database primary key enforces uniqueness; the server retries up to three random candidates on an ID collision only. Existing UUID-based invoice numbers remain valid and are never renamed, so pending QRIS invoices and callbacks continue using their original IDs. Apply `20261020013702_short-invoice-numbers.sql` before running the updated reservation endpoint.

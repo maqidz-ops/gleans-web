@@ -127,3 +127,22 @@ test('checkout uses the server-verified identity, including after session refres
   await assert.rejects(()=>checkoutUserId(async()=>Response.json({error:'Unavailable'},{status:503})),/Layanan akun/);
   await assert.rejects(()=>checkoutUserId(async()=>Response.json({account:{name:'Tester'}})),/Sesi akun belum dapat diperiksa/);
 });
+
+test('invoice numbers use the short uppercase format and retry only primary-key collisions',async()=>{
+  const {invoiceNumber,reserveInvoice}=await moduleFrom('src/features/payments/server/invoice.ts');
+  const numbers=Array.from({length:1000},()=>invoiceNumber());
+  for(const id of numbers) assert.match(id,/^GLS-[0-9A-F]{12}$/);
+  assert.equal(new Set(numbers).size,numbers.length);
+  const ids=[];
+  const result=await reserveInvoice(async id=>{
+    ids.push(id);
+    return ids.length===1 ? {error:{code:'23505',message:'duplicate key violates duitku_orders_pkey'}} : {error:null,data:{id}};
+  });
+  assert.equal(ids.length,2);assert.notEqual(ids[0],ids[1]);assert.equal(result.data.id,ids[1]);
+  let attempts=0;
+  await reserveInvoice(async()=>{attempts++;return {error:{code:'23505',message:'duitku_orders_document_key_key'}};});
+  assert.equal(attempts,1);
+  attempts=0;
+  await reserveInvoice(async()=>{attempts++;return {error:{code:'23505',message:'duitku_orders_pkey'}};});
+  assert.equal(attempts,3);
+});
