@@ -2,6 +2,8 @@ export type PaymentStatus = "draft" | "creating" | "pending" | "paid" | "failed"
 export type PaymentOrder = {
   id: string;
   document_name: string;
+  document_bytes?: number;
+  word_count?: number;
   amount: number;
   status: PaymentStatus;
   payment_method: string | null;
