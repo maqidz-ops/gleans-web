@@ -15,8 +15,9 @@
     "test:dashboard": "node scripts/test-dashboard.mjs",
     "test:admin": "node scripts/test-admin.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "pnpm test:auth && pnpm test:admin && pnpm test:dashboard && pnpm test:cite && pnpm test:file",
-    "test:auth": "node --test tests/auth-session.test.mjs"
+    "test": "pnpm test:payments && pnpm test:auth && pnpm test:admin && pnpm test:dashboard && pnpm test:cite && pnpm test:file",
+    "test:auth": "node --test tests/auth-session.test.mjs",
+    "test:payments": "node --test tests/duitku.test.mjs"
   },
   "dependencies": {
     "@citation-js/core": "^0.9.0",

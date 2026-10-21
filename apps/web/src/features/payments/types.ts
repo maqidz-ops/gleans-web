@@ -1,0 +1,23 @@
+export type PaymentStatus = "draft" | "creating" | "pending" | "paid" | "failed" | "expired";
+export type PaymentOrder = {
+  id: string;
+  document_name: string;
+  document_bytes?: number;
+  word_count?: number;
+  amount: number;
+  status: PaymentStatus;
+  payment_method: string | null;
+  payment_url: string | null;
+  qr_string: string | null;
+  reference: string | null;
+  created_at: string;
+  expires_at: string | null;
+  paid_at: string | null;
+  fulfillment_status: "pending" | "processing" | "completed" | "failed";
+  completed_at: string | null;
+  report_expires_at: string | null;
+  can_download?: boolean;
+  has_access?: boolean;
+  access_code?: string | null;
+};
+export const PAYMENT_DOCUMENT_BUCKET = "shield-sandbox-documents";

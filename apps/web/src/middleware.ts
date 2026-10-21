@@ -10,4 +10,4 @@ export async function middleware(request: NextRequest) {
   for (const cookie of response.cookies.getAll()) forwarded.cookies.set(cookie);
   return forwarded;
 }
-export const config = { matcher: ["/dashboard/:path*", "/akun", "/admin/:path*"] };
+export const config = { matcher: ["/dashboard/:path*", "/akun", "/admin/:path*", "/pembayaran", "/api/payments/orders/:path*", "/api/payments/uploads/:path*", "/api/admin/shield-orders/:path*"] };

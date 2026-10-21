@@ -9,7 +9,7 @@ import { PRODUCTS } from "@/config/site";
 export const metadata: Metadata = {
   title: "Cek Deteksi AI & Plagiarisme",
   description:
-    "Unggah karya ilmiah atau esaimu dan dapatkan laporan deteksi AI serta plagiarisme lewat WhatsApp dalam hitungan menit.",
+    "Unggah dokumen, bayar dengan QRIS, lalu cek pesanan dan unduh laporan pemeriksaan tanpa perlu membuat akun.",
 };
 
 export default function DeteksiAiPage() {
@@ -20,13 +20,13 @@ export default function DeteksiAiPage() {
         <PageIntro
           badge={{ icon: PRODUCTS[0].icon, label: PRODUCTS[0].tag }}
           title="Cek Deteksi AI & Plagiarisme"
-          description="Unggah dokumenmu, bayar sekali, dan laporan hasil pemeriksaan dikirim langsung ke WhatsApp."
+          description="Unggah dokumenmu, bayar sekali, lalu cek pesanan dan unduh hasil pemeriksaan tanpa perlu akun."
         />
         <OrderForm />
       </section>
       <ToolHighlights
         title="Alur pemesanan"
-        description="Tiga langkah, dari unggah dokumen sampai laporan masuk ke WhatsApp."
+        description="Tiga langkah, dari unggah dokumen sampai unduh hasil pemeriksaan."
         items={[
           {
             step: "1",
@@ -40,8 +40,8 @@ export default function DeteksiAiPage() {
           },
           {
             step: "3",
-            title: "Terima laporan",
-            body: "Hasil deteksi AI dan plagiarisme dikirim ke WhatsApp yang kamu isi, biasanya dalam beberapa menit.",
+            title: "Unduh hasil",
+            body: "Cari nomor invoice atau WhatsApp di Cek Pesanan. Setelah pemeriksaan selesai, unduh hasil selama 24 jam. Simpan tautan akses untuk membuka hasil di perangkat lain.",
           },
         ]}
       />

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { CHECKOUT_PREVIEW_KEY } from "@/features/payments/lib/preview";
+import { uploadPaymentFile } from "@/features/payments/upload-file";
 import { useDropzone } from "react-dropzone";
 import { Loader2, X } from "lucide-react";
 import { toast } from "sonner";
@@ -34,6 +34,8 @@ export function OrderForm() {
   const [promo, setPromo] = useState<AppliedPromo | null>(null);
   const [document, setDocument] = useState<Document | null>(null);
   const [reading, setReading] = useState(false);
+  const [paying, setPaying] = useState(false);
+  const submission = useRef<{ file: File; ticket: string; requestId: string } | null>(null);
 
   const subtotal = document ? PRICE_PER_DOCUMENT : 0;
   const discount = document ? (promo?.discount ?? 0) : 0;
@@ -94,27 +96,30 @@ export function OrderForm() {
     toast.success(`Kode ${applied.code} dipakai. ${applied.label}.`);
   }
 
-  function handlePay() {
+  async function handlePay() {
+    if (paying) return;
     const parsed = whatsappSchema.safeParse(whatsapp);
-    if (!parsed.success) {
-      setWhatsappError(parsed.error.issues[0].message);
-      return;
-    }
+    if (!parsed.success) { setWhatsappError(parsed.error.issues[0].message); return; }
     setWhatsappError(null);
-    if (!document) {
-      toast.error("Unggah dokumen yang mau diperiksa.");
-      return;
-    }
+    if (!document) { toast.error("Unggah dokumen yang mau diperiksa."); return; }
+    setPaying(true);
     try {
-      sessionStorage.setItem(CHECKOUT_PREVIEW_KEY, JSON.stringify({
-        id: `GLS-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
-        amount: total,
-        document: document.file.name,
-      }));
-      router.push("/pembayaran");
-    } catch {
-      toast.error("Tidak dapat membuka pembayaran. Aktifkan penyimpanan browser lalu coba kembali.");
-    }
+      if (!submission.current || submission.current.file !== document.file) {
+        const ticket = await uploadPaymentFile(document.file);
+        submission.current = { file: document.file, ticket, requestId: crypto.randomUUID() };
+      }
+      const response = await fetch("/api/payments/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ requestId: submission.current.requestId, ticketId: submission.current.ticket, words: document.words, whatsapp: parsed.data, ...(promo ? { promo: promo.code } : {}) }) });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error);
+      if (body.order.status === "draft") {
+        try {
+          const payment = await fetch(`/api/payments/orders/${encodeURIComponent(body.order.id)}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "pay" }) });
+          if (!payment.ok) { const result = await payment.json(); toast.error(result.error || "QRIS belum dapat dibuat. Coba kembali pada halaman pembayaran."); }
+        } catch { toast.error("QRIS belum dapat dikonfirmasi. Periksa pesanan pada halaman pembayaran."); }
+      }
+      router.push(`/pembayaran?order=${encodeURIComponent(body.order.id)}${body.access_code ? `#access=${encodeURIComponent(body.access_code)}` : ""}`);
+    } catch (error) { toast.error(error instanceof Error ? error.message : "Tidak dapat membuka pembayaran."); }
+    finally { setPaying(false); }
   }
 
   return (
@@ -147,6 +152,7 @@ export function OrderForm() {
               value={whatsapp}
               onChange={(e) => {
                 setWhatsapp(e.target.value);
+                submission.current = null;
                 setWhatsappError(null);
               }}
               aria-invalid={whatsappError ? true : undefined}
@@ -170,6 +176,7 @@ export function OrderForm() {
               value={promoInput}
               onChange={(e) => {
                 setPromoInput(e.target.value);
+                submission.current = null;
                 setPromo(null);
               }}
               placeholder="Masukkan Kode Promo"
@@ -219,6 +226,7 @@ export function OrderForm() {
 
       <section className="flex min-w-0 flex-col gap-6 rounded-[24px] border bg-white p-4">
         <h2 className="text-xl font-semibold">Ringkasan Pesanan</h2>
+        <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">Sandbox Duitku: simulasi pembayaran tanpa uang sungguhan. Kamu dapat memesan tanpa membuat akun.</p>
 
         <div className="flex-1">
           {document ? (
@@ -266,10 +274,10 @@ export function OrderForm() {
             type="button"
             size="pill"
             onClick={handlePay}
-            disabled={!document || reading}
+            disabled={!document || reading || paying}
             className="w-full font-normal disabled:opacity-100"
           >
-            Bayar Sekarang
+            {paying ? "Menyiapkan pesanan…" : "Bayar Sekarang"}
           </Button>
         </div>
       </section>

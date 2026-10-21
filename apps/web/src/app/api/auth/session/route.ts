@@ -24,6 +24,7 @@ export async function GET() {
     const name = typeof user.profile?.name === "string" ? user.profile.name.trim() : "";
     const dashboardHref = accountLandingPage(user);
     return Response.json({ account: {
+      id: user.id,
       name: name || user.email.split("@")[0],
       email: user.email,
       dashboardHref,

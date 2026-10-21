@@ -45,6 +45,7 @@ export const NAV_LINKS = [
 ] as const;
 
 export const CONTACT = {
+  address: "Jl. Sempor Lama, Gang Nanas, RT.04/RW.07, Gombong, Kebumen 54412",
   phone: "+62 819-9809-6254",
   whatsapp: "https://wa.me/6281998096254",
   email: "team@gleans.my.id",

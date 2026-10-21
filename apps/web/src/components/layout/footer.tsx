@@ -22,6 +22,12 @@ export function Footer() {
               Gleans adalah platform all-in-one yang mempermudah mahasiswa menyusun penulisan akademik secara
               praktis, cepat, dan akurat.
             </p>
+            <section aria-labelledby="footer-office-heading">
+              <h3 id="footer-office-heading" className="mb-3 font-semibold">KANTOR KAMI</h3>
+              <address className="text-muted-foreground leading-relaxed not-italic">
+                {CONTACT.address}
+              </address>
+            </section>
           </div>
 
           <div className="grid grid-cols-1 gap-10 md:grid-cols-2 md:gap-16">
