@@ -31,7 +31,7 @@ export default function DeteksiAiPage() {
           {
             step: "1",
             title: "Unggah dokumen",
-            body: "Isi nomor WhatsApp dan email bukti pembayaran, lalu unggah file PDF, DOC, DOCX, atau TXT. Sistem menghitung jumlah kata sebelum kamu membayar.",
+            body: "Isi nomor WhatsApp, lalu unggah file PDF, DOC, DOCX, atau TXT. Sistem menghitung jumlah kata sebelum kamu membayar.",
           },
           {
             step: "2",

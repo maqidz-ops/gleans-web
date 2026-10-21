@@ -17,8 +17,7 @@ export async function POST(request: Request) {
     const parsed = schema.safeParse(JSON.parse(raw)); if (!parsed.success) return json({ error: "Data pesanan tidak valid." }, 400);
     const input = parsed.data; const user = await dashboardUser(); const guest = await guestSession();
     if (!guest) return json({ error: "Unggah dokumen terlebih dahulu." }, 400);
-    const email = input.email || user?.email;
-    if (!email) return json({ error: "Masukkan email untuk bukti pembayaran." }, 400);
+    const email = input.email || user?.email || "";
     const promo = input.promo ? resolvePromo(input.promo, SHIELD_PRICE) : null;
     if (input.promo && !promo) return json({ error: "Kode promo tidak valid." }, 400);
     const { data, error } = await reserveInvoice(id => paymentAdmin().database.rpc("reserve_guest_order", {

@@ -64,7 +64,7 @@ export async function createInvoice(order: { id: string; amount: number; documen
   const data = await post("v2/inquiry", {
     merchantCode, paymentAmount: order.amount, paymentMethod: method, merchantOrderId: order.id,
     productDetails: "Gleans Shield — Sandbox", customerVaName: customer.name.slice(0, 20),
-    email: customer.email, phoneNumber: customer.whatsapp,
+    ...(customer.email ? { email: customer.email } : {}), phoneNumber: customer.whatsapp,
     itemDetails: [{ name: "Pemeriksaan dokumen Gleans Shield (Sandbox)", price: order.amount, quantity: 1 }],
     callbackUrl: new URL("/api/payments/duitku/callback", origin).toString(),
     returnUrl: new URL(`/pembayaran?order=${order.id}`, origin).toString(),

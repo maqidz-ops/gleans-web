@@ -24,7 +24,7 @@ The private bucket `shield-sandbox-documents` must exist. Never make it public. 
 
 ## Guest flow
 
-1. Open `/deteksi-ai` without an account. Enter WhatsApp, customer email (required by Duitku), optional promo, and a supported file up to 25MB / 25,000 words.
+1. Open `/deteksi-ai` without an account. Enter WhatsApp, optional promo, and a supported file up to 25MB / 25,000 words.
 2. `/api/payments/uploads` issues a presigned POST restricted to a server-generated staging key and declared maximum size. The browser uploads directly to Storage without receiving an admin key. Confirmation validates actual size/header and seals a snapshot at a different private key; reusing a staging URL cannot alter the order document.
 3. A short-lived, private upload ticket binds the file to an httpOnly guest cookie. `reserve_guest_order` consumes it atomically, applies server pricing, and binds the order to its guest hash and optional authenticated owner. Reusing a consumed ticket is rejected; request retries are idempotent.
 4. New invoice numbers use `GLS-` plus 12 cryptographically random uppercase hex characters. The primary key enforces uniqueness and the server retries three ID candidates on primary-key collisions only. Legacy UUID invoices are unchanged.
@@ -64,3 +64,5 @@ The customer reviewer account has already been provisioned; its credentials rema
 
 - [Duitku API](https://docs.duitku.com/api/id/)
 - [Duitku Sandbox simulator](https://sandbox.duitku.com/payment/demo/demosuccesstransaction.aspx)
+
+Email is not collected by the upload form. Guest orders store an empty email and omit it from the Duitku request; signed-in orders may use the account email. On 21 October 2026, the merchant Sandbox accepted both omitted and empty email with status `00` and a QRIS payload. Duitku documentation still marks email as required; this behavior has not been verified in Production.

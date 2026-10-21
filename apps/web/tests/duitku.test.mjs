@@ -39,16 +39,20 @@ test('invoice signs the server amount and rejects unexpected merchant, amount an
   Object.assign(process.env,{DUITKU_ENV:'sandbox',DUITKU_MERCHANT_CODE:'DS123',DUITKU_API_KEY:'test-secret',DUITKU_PUBLIC_URL:'https://shop.example.test'});
   const order={id:'GLS-test',amount:10000,document_name:'paper.txt'};
   try{
-    let variation={};
+    let variation={}; let expectedEmail="test@example.invalid";
     globalThis.fetch=async(url,init)=>{
       assert.equal(url,'https://sandbox.duitku.com/webapi/api/merchant/v2/inquiry');
       const payload=JSON.parse(init.body);
+      assert.equal(payload.email, expectedEmail);
       assert.equal(payload.paymentMethod,'NQ');assert.equal(payload.paymentAmount,10000);assert.equal(payload.signature,gateway.signature('DS123GLS-test10000','test-secret'));
       assert.equal(payload.callbackUrl,'https://shop.example.test/api/payments/duitku/callback');
       assert.equal(payload.returnUrl,'https://shop.example.test/pembayaran?order=GLS-test');
       return Response.json({statusCode:'00',merchantCode:'DS123',amount:'10000',reference:'ref',paymentUrl:'https://sandbox.duitku.com/pay',...variation});
     };
     await gateway.createInvoice(order,'NQ',{email:'test@example.invalid',name:'Tester',whatsapp:'08123456789'});
+    expectedEmail=undefined;
+    await gateway.createInvoice(order,'NQ',{email:'',name:'Guest',whatsapp:'08123456789'});
+    expectedEmail='test@example.invalid';
     for(const item of [{amount:1},{merchantCode:'wrong'},{paymentUrl:'https://attacker.test'},{statusCode:'99'}]){variation=item;await assert.rejects(()=>gateway.createInvoice(order,'NQ',{email:'test@example.invalid',name:'Tester',whatsapp:'08123456789'}));}
   }finally{globalThis.fetch=originalFetch;process.env=previous;}
 });

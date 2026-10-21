@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { uploadPaymentFile } from "@/features/payments/upload-file";
@@ -28,7 +28,6 @@ type Document = { file: File; words: number };
 
 export function OrderForm() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [whatsappError, setWhatsappError] = useState<string | null>(null);
   const [promoInput, setPromoInput] = useState("");
@@ -37,12 +36,6 @@ export function OrderForm() {
   const [reading, setReading] = useState(false);
   const [paying, setPaying] = useState(false);
   const submission = useRef<{ file: File; ticket: string; requestId: string } | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    fetch("/api/auth/session", { cache: "no-store" }).then(response => response.json()).then(body => { if (active && body.account?.email) setEmail(value => value || body.account.email); }).catch(() => {});
-    return () => { active = false; };
-  }, []);
 
   const subtotal = document ? PRICE_PER_DOCUMENT : 0;
   const discount = document ? (promo?.discount ?? 0) : 0;
@@ -109,14 +102,13 @@ export function OrderForm() {
     if (!parsed.success) { setWhatsappError(parsed.error.issues[0].message); return; }
     setWhatsappError(null);
     if (!document) { toast.error("Unggah dokumen yang mau diperiksa."); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) || email.trim().length > 50) { toast.error("Masukkan email yang valid untuk bukti pembayaran."); return; }
     setPaying(true);
     try {
       if (!submission.current || submission.current.file !== document.file) {
         const ticket = await uploadPaymentFile(document.file);
         submission.current = { file: document.file, ticket, requestId: crypto.randomUUID() };
       }
-      const response = await fetch("/api/payments/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ requestId: submission.current.requestId, ticketId: submission.current.ticket, email: email.trim(), words: document.words, whatsapp: parsed.data, ...(promo ? { promo: promo.code } : {}) }) });
+      const response = await fetch("/api/payments/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ requestId: submission.current.requestId, ticketId: submission.current.ticket, words: document.words, whatsapp: parsed.data, ...(promo ? { promo: promo.code } : {}) }) });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error);
       if (body.order.status === "draft") {
@@ -168,10 +160,6 @@ export function OrderForm() {
               className="h-12 rounded-full pr-5 pl-13 md:text-base"
             />
           </div>
-        </Field>
-
-        <Field label="Email bukti pembayaran" htmlFor="checkout-email">
-          <Input id="checkout-email" type="email" autoComplete="email" maxLength={50} value={email} onChange={event => { setEmail(event.target.value); submission.current = null; }} placeholder="kamu@email.com" className="h-12 rounded-full px-5 md:text-base" />
         </Field>
 
         <Field label="Kode Promo" htmlFor="promo">
